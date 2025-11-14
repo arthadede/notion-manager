@@ -1,6 +1,7 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import { Client } from '@notionhq/client';
 
 dotenv.config();
@@ -15,7 +16,7 @@ const notion = new Client({
   auth: process.env.NOTION_API_KEY,
 });
 
-const databaseId = process.env.NOTION_DATABASE_ID || '';
+const DATABASE_ID = process.env.NOTION_DATABASE_ID || '';
 
 interface Activity {
   id: string;
@@ -25,17 +26,23 @@ interface Activity {
   endTime: string | null;
 }
 
-// Get current (latest) activity
-app.get('/api/current-activity', async (req, res) => {
+const parseActivity = (page: any): Activity => ({
+  id: page.id,
+  name: page.properties.Kind?.select?.name || '',
+  notes: page.properties.Note?.rich_text?.[0]?.plain_text || '',
+  startTime: page.properties['Started Time']?.date?.start || '',
+  endTime: page.properties['End Time']?.date?.start || null,
+});
+
+app.get('/api/current-activity', async (_req: Request, res: Response) => {
   try {
     const response = await notion.databases.query({
-      database_id: databaseId,
-      sorts: [
-        {
-          property: 'Start Time',
-          direction: 'descending',
-        },
-      ],
+      database_id: DATABASE_ID,
+      filter: {
+        property: 'End Time',
+        date: { is_empty: true },
+      },
+      sorts: [{ property: 'Started Time', direction: 'descending' }],
       page_size: 1,
     });
 
@@ -43,99 +50,58 @@ app.get('/api/current-activity', async (req, res) => {
       return res.json({ activity: null });
     }
 
-    const page: any = response.results[0];
-    const properties = page.properties;
-
-    const activity: Activity = {
-      id: page.id,
-      name: properties.Activity?.title?.[0]?.plain_text || '',
-      notes: properties.Notes?.rich_text?.[0]?.plain_text || '',
-      startTime: properties['Start Time']?.date?.start || '',
-      endTime: properties['End Time']?.date?.start || null,
-    };
-
-    res.json({ activity });
+    res.json({ activity: parseActivity(response.results[0]) });
   } catch (error) {
     console.error('Error fetching current activity:', error);
     res.status(500).json({ error: 'Failed to fetch current activity' });
   }
 });
 
-// Get all unique activity names for dropdown
-app.get('/api/activities', async (req, res) => {
+app.get('/api/activities', async (_req: Request, res: Response) => {
   try {
-    const response = await notion.databases.query({
-      database_id: databaseId,
-      page_size: 100,
+    const database = await notion.databases.retrieve({
+      database_id: DATABASE_ID,
     });
 
-    const activityNames = new Set<string>();
-    response.results.forEach((page: any) => {
-      const name = page.properties.Activity?.title?.[0]?.plain_text;
-      if (name) {
-        activityNames.add(name);
-      }
-    });
+    const kindProperty: any = database.properties.Kind;
+    const activities = kindProperty?.select?.options?.map((opt: any) => opt.name) || [];
 
-    res.json({ activities: Array.from(activityNames).sort() });
+    res.json({ activities: activities.sort() });
   } catch (error) {
     console.error('Error fetching activities:', error);
     res.status(500).json({ error: 'Failed to fetch activities' });
   }
 });
 
-// Update activity - ends current activity and creates new one
-app.post('/api/update-activity', async (req, res) => {
+app.post('/api/update-activity', async (req: Request, res: Response) => {
   try {
     const { currentActivityId, newActivityName, notes } = req.body;
+    const now = new Date().toISOString();
 
-    // End the current activity by adding end time
     if (currentActivityId) {
       await notion.pages.update({
         page_id: currentActivityId,
         properties: {
-          'End Time': {
-            date: {
-              start: new Date().toISOString(),
-            },
-          },
+          'End Time': { date: { start: now } },
         },
       });
     }
 
-    // Create new activity without end time (ongoing)
     const newPage = await notion.pages.create({
-      parent: {
-        database_id: databaseId,
-      },
+      parent: { database_id: DATABASE_ID },
       properties: {
-        Activity: {
-          title: [
-            {
-              text: {
-                content: newActivityName,
-              },
-            },
-          ],
+        Name: { title: [] },
+        Kind: { select: { name: newActivityName } },
+        Note: {
+          rich_text: notes ? [{ text: { content: notes } }] : [],
         },
-        Notes: {
-          rich_text: [
-            {
-              text: {
-                content: notes || '',
-              },
-            },
-          ],
-        },
-        'Start Time': {
-          date: {
-            start: new Date().toISOString(),
-          },
-        },
+        'Started Time': { date: { start: now } },
+        Author: { select: { name: 'Claude' } },
       },
     });
 
-    res.json({ success: true, newActivityId: newPage.id });
+    const newActivity = parseActivity(newPage);
+    res.json({ success: true, activity: newActivity });
   } catch (error) {
     console.error('Error updating activity:', error);
     res.status(500).json({ error: 'Failed to update activity' });

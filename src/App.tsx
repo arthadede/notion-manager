@@ -85,68 +85,84 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Activity Tracker</h1>
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-2xl mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="mb-12">
+          <h1 className="text-5xl font-bold mb-4">Activity Tracker</h1>
           {currentActivity && (
-            <p className="text-gray-400 text-sm">
-              Current: <span className="text-white font-medium">{currentActivity.name}</span>
-            </p>
+            <div className="flex items-center gap-2 text-gray-400">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm">
+                Currently tracking: <span className="text-white font-medium">{currentActivity.name}</span>
+              </span>
+            </div>
           )}
         </div>
 
-        <div className="space-y-4">
-          {/* Activity Dropdown */}
-          <div>
-            <label htmlFor="activity" className="block text-sm font-medium text-gray-400 mb-2">
-              Activity
-            </label>
-            <select
-              id="activity"
-              value={selectedActivity}
-              onChange={(e) => setSelectedActivity(e.target.value)}
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-white transition-colors"
+        {/* Main Card */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8">
+          <div className="space-y-6">
+            {/* Activity Dropdown */}
+            <div>
+              <label htmlFor="activity" className="block text-sm font-medium text-gray-400 mb-3">
+                Activity
+              </label>
+              <select
+                id="activity"
+                value={selectedActivity}
+                onChange={(e) => setSelectedActivity(e.target.value)}
+                className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all"
+              >
+                <option value="">Select an activity</option>
+                {activities.map((activity) => (
+                  <option key={activity} value={activity}>
+                    {activity}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Notes Input */}
+            <div>
+              <label htmlFor="notes" className="block text-sm font-medium text-gray-400 mb-3">
+                Notes <span className="text-gray-600">(optional)</span>
+              </label>
+              <input
+                id="notes"
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add notes..."
+                className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Update Button */}
+            <button
+              onClick={handleUpdate}
+              disabled={loading}
+              className="w-full px-4 py-3 bg-white text-black font-medium rounded-md hover:bg-gray-200 disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
             >
-              <option value="">Select an activity</option>
-              {activities.map((activity) => (
-                <option key={activity} value={activity}>
-                  {activity}
-                </option>
-              ))}
-            </select>
+              {loading ? 'Updating...' : 'Update Activity'}
+            </button>
+
+            {/* Message */}
+            {message && (
+              <div className={`p-4 rounded-md text-sm ${
+                message.includes('success')
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
+              }`}>
+                {message}
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Notes Input */}
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-400 mb-2">
-              Notes
-            </label>
-            <input
-              id="notes"
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes (optional)"
-              className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-white transition-colors"
-            />
-          </div>
-
-          {/* Update Button */}
-          <button
-            onClick={handleUpdate}
-            disabled={loading}
-            className="w-full px-4 py-3 bg-white text-black font-medium rounded-lg hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400 transition-colors"
-          >
-            {loading ? 'Updating...' : 'Update Activity'}
-          </button>
-
-          {/* Message */}
-          {message && (
-            <p className={`text-center text-sm ${message.includes('success') ? 'text-green-400' : 'text-red-400'}`}>
-              {message}
-            </p>
-          )}
+        {/* Footer */}
+        <div className="mt-8 text-center text-sm text-gray-600">
+          Powered by Notion API
         </div>
       </div>
     </div>
