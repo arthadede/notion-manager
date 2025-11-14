@@ -60,24 +60,32 @@ cp .env.example .env
 ```
 NOTION_API_KEY=your_notion_integration_token_here
 NOTION_DATABASE_ID=27723004714380a7a181d695565092a5
-VITE_API_URL=http://localhost:3001
 ```
 
 ## Running the Application
 
-You need to run both the backend server and the frontend:
+Run as a single service (backend + frontend together)
 
-### Terminal 1 - Backend Server
+The Express server now also serves the built frontend from `dist/`.
+
+1. Build the frontend output:
+```bash
+npm run build
+```
+2. Start the server (serves API at `/api/*` and UI at `/`):
 ```bash
 npm run server
 ```
+Open `http://localhost:3000` for the UI. API is available under `http://localhost:3000/api/*`.
 
-### Terminal 2 - Frontend
+Or run with Docker (single container):
 ```bash
-npm run dev
+docker build -t histweety/activity-manage:combined .
+docker run --rm -p 3000:3000 --env-file .env \
+  histweety/activity-manage:combined
 ```
 
-The application will be available at `http://localhost:5173`
+Note: The container serves both the UI and API on the same origin/port. For local development with hot reload, you may still use `npm run dev` (Vite) and `npm run server` separately, but this is optional and not required for production.
 
 ## How It Works
 
@@ -121,8 +129,7 @@ acitivity-manage/
 - Check that the property name matches exactly: "Activity" (case-sensitive)
 
 ### CORS errors
-- Make sure both frontend and backend are running
-- Check that `VITE_API_URL` in `.env` matches your backend server URL
+- In the single-service/Docker setup, CORS should not be needed because frontend and backend share the same origin.
 
 ## License
 

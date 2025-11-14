@@ -1,15 +1,15 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import cors from 'cors';
 import * as dotenv from 'dotenv';
 import { Client } from '@notionhq/client';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 dotenv.config();
 
 const app = express();
-const PORT = 3001;
+const PORT = Number(process.env.PORT ?? 3000);
 
-app.use(cors());
 app.use(express.json());
 
 const notion = new Client({
@@ -106,6 +106,21 @@ app.post('/api/update-activity', async (req: Request, res: Response) => {
     console.error('Error updating activity:', error);
     res.status(500).json({ error: 'Failed to update activity' });
   }
+});
+
+// --- Static frontend serving (Vite build) and SPA fallback ---
+// Resolve current file/dir in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve the built frontend from /dist
+const distDir = path.resolve(__dirname, '../dist');
+app.use(express.static(distDir));
+
+// SPA fallback for non-API routes (Express v5 compatible)
+// Use a regex to match any path that does NOT start with /api
+app.get(/^(?!\/api).*/, (_req, res) => {
+  res.sendFile(path.join(distDir, 'index.html'));
 });
 
 app.listen(PORT, () => {

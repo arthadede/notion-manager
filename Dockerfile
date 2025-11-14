@@ -1,5 +1,5 @@
 # Simple production image to run the Express API (TypeScript via tsx)
-# This image runs the backend only on port 3001
+# This image runs the combined service (API + static frontend) on port 3000
 
 FROM node:20-alpine
 
@@ -18,8 +18,12 @@ RUN npm ci --include=dev
 # Copy the rest of the source code
 COPY . .
 
-# Expose backend port
-EXPOSE 3001
+# Build the frontend so Express can serve /dist in the same service
+RUN npm run build
+
+# Expose service port
+ENV PORT=3000
+EXPOSE 3000
 
 # Default command: run the server using tsx
 ENV NODE_ENV=production

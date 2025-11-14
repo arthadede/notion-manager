@@ -16,7 +16,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  // In combined mode, use same-origin relative API paths
 
   useEffect(() => {
     fetchCurrentActivity();
@@ -25,7 +25,7 @@ function App() {
 
   const fetchCurrentActivity = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/current-activity`);
+      const response = await fetch(`/api/current-activity`);
       const data = await response.json();
       if (data.activity) {
         setCurrentActivity(data.activity);
@@ -38,7 +38,7 @@ function App() {
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/activities`);
+      const response = await fetch(`/api/activities`);
       const data = await response.json();
       setActivities(data.activities || []);
     } catch (error) {
@@ -56,7 +56,7 @@ function App() {
     setMessage('');
 
     try {
-      const response = await fetch(`${API_URL}/api/update-activity`, {
+      const response = await fetch(`/api/update-activity`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
