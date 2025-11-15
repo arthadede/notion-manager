@@ -1,18 +1,14 @@
-import './globals.css'
+import "./globals.css";
 
 export const metadata = {
-  title: 'Activity Tracker',
-  description: 'Track your activities with Notion API',
-}
+  title: "Activity Tracker",
+  description: "Track your activities with Notion API",
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>{children}</body>
     </html>
-  )
+  );
 }

@@ -20,17 +20,20 @@ A simple activity tracking application built with Next.js and Notion API.
 ## Quick Start
 
 1. **Set up environment variables:**
+
    ```bash
    cp .env.local.local.example .env.local.local
    # Edit .env.local.local with your Notion API credentials
    ```
 
 2. **Install dependencies:**
+
    ```bash
    make setup
    ```
 
 3. **Run development server:**
+
    ```bash
    make dev
    ```
@@ -43,11 +46,13 @@ A simple activity tracking application built with Next.js and Notion API.
 ## Docker Deployment
 
 1. **Build and run with Docker Compose:**
+
    ```bash
    make up
    ```
 
 2. **View logs:**
+
    ```bash
    make logs
    ```
