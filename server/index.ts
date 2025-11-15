@@ -34,7 +34,7 @@ const parseActivity = (page: any): Activity => ({
   endTime: page.properties['End Time']?.date?.start || null,
 });
 
-app.get('/api/current-activity', async (_req: Request, res: Response) => {
+app.get('/api/activities/current', async (_req: Request, res: Response) => {
   try {
     const response = await notion.databases.query({
       database_id: DATABASE_ID,
@@ -52,7 +52,6 @@ app.get('/api/current-activity', async (_req: Request, res: Response) => {
 
     res.json({ activity: parseActivity(response.results[0]) });
   } catch (error) {
-    console.error('Error fetching current activity:', error);
     res.status(500).json({ error: 'Failed to fetch current activity' });
   }
 });
@@ -68,12 +67,11 @@ app.get('/api/activities', async (_req: Request, res: Response) => {
 
     res.json({ activities: activities.sort() });
   } catch (error) {
-    console.error('Error fetching activities:', error);
     res.status(500).json({ error: 'Failed to fetch activities' });
   }
 });
 
-app.post('/api/update-activity', async (req: Request, res: Response) => {
+app.post('/api/activities', async (req: Request, res: Response) => {
   try {
     const { currentActivityId, newActivityName, notes } = req.body;
     const now = new Date().toISOString();
@@ -103,22 +101,16 @@ app.post('/api/update-activity', async (req: Request, res: Response) => {
     const newActivity = parseActivity(newPage);
     res.json({ success: true, activity: newActivity });
   } catch (error) {
-    console.error('Error updating activity:', error);
     res.status(500).json({ error: 'Failed to update activity' });
   }
 });
 
-// --- Static frontend serving (Vite build) and SPA fallback ---
-// Resolve current file/dir in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve the built frontend from /dist
 const distDir = path.resolve(__dirname, '../dist');
 app.use(express.static(distDir));
 
-// SPA fallback for non-API routes (Express v5 compatible)
-// Use a regex to match any path that does NOT start with /api
 app.get(/^(?!\/api).*/, (_req, res) => {
   res.sendFile(path.join(distDir, 'index.html'));
 });

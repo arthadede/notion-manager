@@ -25,24 +25,24 @@ function App() {
 
   const fetchCurrentActivity = async () => {
     try {
-      const response = await fetch(`/api/current-activity`);
+      const response = await fetch('/api/activities/current');
       const data = await response.json();
       if (data.activity) {
         setCurrentActivity(data.activity);
         setSelectedActivity(data.activity.name);
       }
     } catch (error) {
-      console.error('Error fetching current activity:', error);
+      setMessage('Failed to fetch current activity');
     }
   };
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch(`/api/activities`);
+      const response = await fetch('/api/activities');
       const data = await response.json();
       setActivities(data.activities || []);
     } catch (error) {
-      console.error('Error fetching activities:', error);
+      setMessage('Failed to fetch activities');
     }
   };
 
@@ -56,7 +56,7 @@ function App() {
     setMessage('');
 
     try {
-      const response = await fetch(`/api/update-activity`, {
+      const response = await fetch('/api/activities', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,6 @@ function App() {
         setMessage('Failed to update activity');
       }
     } catch (error) {
-      console.error('Error updating activity:', error);
       setMessage('Error updating activity');
     } finally {
       setLoading(false);
