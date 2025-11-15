@@ -1,62 +1,62 @@
-import { useState, useEffect } from 'react';
+'use client'
+
+import { useState, useEffect } from 'react'
 
 interface Activity {
-  id: string;
-  name: string;
-  notes: string;
-  startTime: string;
-  endTime: string | null;
+  id: string
+  name: string
+  notes: string
+  startTime: string
+  endTime: string | null
 }
 
-function App() {
-  const [currentActivity, setCurrentActivity] = useState<Activity | null>(null);
-  const [activities, setActivities] = useState<string[]>([]);
-  const [selectedActivity, setSelectedActivity] = useState('');
-  const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-
-  // In combined mode, use same-origin relative API paths
+export default function ActivityTracker() {
+  const [currentActivity, setCurrentActivity] = useState<Activity | null>(null)
+  const [activities, setActivities] = useState<string[]>([])
+  const [selectedActivity, setSelectedActivity] = useState('')
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
-    fetchCurrentActivity();
-    fetchActivities();
-  }, []);
+    fetchCurrentActivity()
+    fetchActivities()
+  }, [])
 
   const fetchCurrentActivity = async () => {
     try {
-      const response = await fetch('/api/activities/current');
-      const data = await response.json();
+      const response = await fetch('/api/current')
+      const data = await response.json()
       if (data.activity) {
-        setCurrentActivity(data.activity);
-        setSelectedActivity(data.activity.name);
+        setCurrentActivity(data.activity)
+        setSelectedActivity(data.activity.name)
       }
     } catch (error) {
-      setMessage('Failed to fetch current activity');
+      setMessage('Failed to fetch current activity')
     }
-  };
+  }
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch('/api/activities');
-      const data = await response.json();
-      setActivities(data.activities || []);
+      const response = await fetch('/api')
+      const data = await response.json()
+      setActivities(data.activities || [])
     } catch (error) {
-      setMessage('Failed to fetch activities');
+      setMessage('Failed to fetch activities')
     }
-  };
+  }
 
   const handleUpdate = async () => {
     if (!selectedActivity) {
-      setMessage('Please select an activity');
-      return;
+      setMessage('Please select an activity')
+      return
     }
 
-    setLoading(true);
-    setMessage('');
+    setLoading(true)
+    setMessage('')
 
     try {
-      const response = await fetch('/api/activities', {
+      const response = await fetch('/api', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,22 +66,22 @@ function App() {
           newActivityName: selectedActivity,
           notes,
         }),
-      });
+      })
 
       if (response.ok) {
-        setMessage('Activity updated successfully!');
-        setNotes('');
-        fetchCurrentActivity();
-        setTimeout(() => setMessage(''), 3000);
+        setMessage('Activity updated successfully!')
+        setNotes('')
+        fetchCurrentActivity()
+        setTimeout(() => setMessage(''), 3000)
       } else {
-        setMessage('Failed to update activity');
+        setMessage('Failed to update activity')
       }
     } catch (error) {
-      setMessage('Error updating activity');
+      setMessage('Error updating activity')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -165,7 +165,5 @@ function App() {
         </div>
       </div>
     </div>
-  );
+  )
 }
-
-export default App;
