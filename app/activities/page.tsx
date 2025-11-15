@@ -152,13 +152,14 @@ export default function ActivityTracker() {
                     <div className="text-responsive flex items-center gap-2 text-gray-400">
                       <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" aria-hidden="true"></div>
                       <span className="text-sm">
-                        Currently tracking: {" "}
+                        Currently tracking:{" "}
                         <span className="font-medium text-white">
-                          {currentActivity.name} - {new Date(currentActivity.startTime).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
+                          {currentActivity.name} -{" "}
+                          {new Date(currentActivity.startTime).toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                         </span>
                       </span>
                     </div>

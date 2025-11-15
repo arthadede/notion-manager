@@ -110,15 +110,7 @@ export async function updateActivity(data: {
 }
 
 export function getTransactionCategories(): string[] {
-  return [
-    "Makan",
-    "Gift",
-    "Bill",
-    "HealthCare",
-    "Shopping",
-    "Subscription",
-    "Transportation"
-  ];
+  return ["Makan", "Gift", "Bill", "HealthCare", "Shopping", "Subscription", "Transportation"];
 }
 
 export async function createTransaction(data: {
@@ -129,32 +121,32 @@ export async function createTransaction(data: {
 }): Promise<Transaction> {
   try {
     const { amount, type, payDate, note } = data;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     const pageProperties: any = {
       Name: {
-        title: []
+        title: [],
       },
       Amount: {
-        number: amount
+        number: amount,
       },
       Type: {
-        select: { name: type }
+        select: { name: type },
       },
       "Pay Date": {
-        date: { start: payDate || today }
-      }
+        date: { start: payDate || today },
+      },
     };
 
     if (note) {
       pageProperties.Note = {
-        rich_text: [{ text: { content: note } }]
+        rich_text: [{ text: { content: note } }],
       };
     }
 
     const newPage = await notion.pages.create({
       parent: { database_id: TRANSACTIONS_DATABASE_ID },
-      properties: pageProperties
+      properties: pageProperties,
     });
 
     return parseTransaction(newPage);
