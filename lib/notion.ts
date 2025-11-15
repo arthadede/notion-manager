@@ -6,6 +6,7 @@ const notion = new Client({
 });
 
 const DATABASE_ID = process.env.NOTION_DATABASE_ID || "";
+const TRANSACTIONS_DATABASE_ID = process.env.NOTION_TRANSACTIONS_DATABASE_ID || "";
 
 export interface Activity {
   id: string;
@@ -13,6 +14,15 @@ export interface Activity {
   notes: string;
   startTime: string;
   endTime: string | null;
+}
+
+export interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  date: string;
+  notes: string;
 }
 
 const parseActivity = (page): Activity => ({
@@ -89,7 +99,6 @@ export async function updateActivity(data: {
           rich_text: notes ? [{ text: { content: notes } }] : [],
         },
         "Started Time": { date: { start: now } },
-        Author: { select: { name: "Claude" } },
       },
     });
 
@@ -99,3 +108,67 @@ export async function updateActivity(data: {
     throw new Error("Failed to update activity");
   }
 }
+
+export function getTransactionCategories(): string[] {
+  return [
+    "Makan",
+    "Gift",
+    "Bill",
+    "HealthCare",
+    "Shopping",
+    "Subscription",
+    "Transportation"
+  ];
+}
+
+export async function createTransaction(data: {
+  amount: number;
+  type: string;
+  payDate?: string;
+  note?: string;
+}): Promise<Transaction> {
+  try {
+    const { amount, type, payDate, note } = data;
+    const today = new Date().toISOString().split('T')[0];
+
+    const pageProperties: any = {
+      Name: {
+        title: []
+      },
+      Amount: {
+        number: amount
+      },
+      Type: {
+        select: { name: type }
+      },
+      "Pay Date": {
+        date: { start: payDate || today }
+      }
+    };
+
+    if (note) {
+      pageProperties.Note = {
+        rich_text: [{ text: { content: note } }]
+      };
+    }
+
+    const newPage = await notion.pages.create({
+      parent: { database_id: TRANSACTIONS_DATABASE_ID },
+      properties: pageProperties
+    });
+
+    return parseTransaction(newPage);
+  } catch (error) {
+    console.error("Error creating transaction:", error);
+    throw new Error("Failed to create transaction");
+  }
+}
+
+const parseTransaction = (page): Transaction => ({
+  id: page.id,
+  description: page.properties.Name?.title?.[0]?.plain_text || "",
+  amount: page.properties.Amount?.number || 0,
+  category: page.properties.Type?.select?.name || "",
+  date: page.properties["Pay Date"]?.date?.start || "",
+  notes: page.properties.Note?.rich_text?.[0]?.plain_text || "",
+});
