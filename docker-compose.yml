@@ -10,6 +10,6 @@ services:
       - NOTION_API_KEY=${NOTION_API_KEY}
       - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
     env_file:
-      - .env
+      - .env.local
     restart: unless-stopped
     container_name: activity-tracker

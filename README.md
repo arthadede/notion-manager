@@ -21,8 +21,8 @@ A simple activity tracking application built with Next.js and Notion API.
 
 1. **Set up environment variables:**
    ```bash
-   cp .env.local.example .env.local
-   # Edit .env.local with your Notion API credentials
+   cp .env.local.local.example .env.local.local
+   # Edit .env.local.local with your Notion API credentials
    ```
 
 2. **Install dependencies:**
