@@ -663,6 +663,14 @@ select.form-control:focus {
 /* ============================================
    Scale Transform Utility
    ============================================ */
-.scale-105 {
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
+.hover\:scale-105:hover {
   transform: scale(1.05);
+}
+
+.hover\:transform:hover {
+  transform: translateZ(0);
 }

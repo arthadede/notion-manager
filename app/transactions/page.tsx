@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { getTransactionCategories } from "@/lib/notion";
 
 interface TransactionFormData {
@@ -113,19 +114,14 @@ export default function TransactionPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen">
-        <div className="py-responsive container">
-          <div className="animate-pulse">
-            <div className="mb-8 h-8 rounded bg-zinc-900"></div>
-            <div className="card">
-              <div className="space-y-6">
-                <div className="h-4 rounded bg-zinc-900"></div>
-                <div className="h-10 rounded bg-zinc-900"></div>
-                <div className="h-4 rounded bg-zinc-900"></div>
-                <div className="h-10 rounded bg-zinc-900"></div>
-                <div className="h-4 rounded bg-zinc-900"></div>
-                <div className="h-20 rounded bg-zinc-900"></div>
-              </div>
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="card">
+            <div className="space-y-4">
+              <div className="skeleton h-10 w-full rounded-md"></div>
+              <div className="skeleton h-10 w-full rounded-md"></div>
+              <div className="skeleton h-20 w-full rounded-md"></div>
+              <div className="skeleton h-10 w-full rounded-md"></div>
             </div>
           </div>
         </div>
@@ -134,93 +130,94 @@ export default function TransactionPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="py-responsive container">
-        <div className="animate-fade-in">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="card">
-              <div className="space-y-6">
-                {/* Amount */}
-                <div>
-                  <label htmlFor="amount" className="mb-3 block text-sm font-medium">
-                    Amount <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    id="amount"
-                    name="amount"
-                    value={formData.amount || ""}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-
-                {/* Type/Category */}
-                <div>
-                  <label htmlFor="type" className="mb-3 block text-sm font-medium">
-                    Category <span className="text-red-400">*</span>
-                  </label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    required
-                    disabled={isLoading || categories.length === 0}
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label htmlFor="note" className="mb-3 block text-sm font-medium">
-                    Notes
-                  </label>
-                  <textarea
-                    id="note"
-                    name="note"
-                    value={formData.note}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="Additional notes (optional)"
-                    rows={3}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button type="submit" className={`btn ${isLoading ? "loading" : ""}`} disabled={isLoading}>
-              {isLoading ? "Creating Transaction..." : "Create Transaction"}
-            </button>
-
-            {/* Status Messages */}
-            {status.type && (
-              <div
-                className={`status-indicator ${
-                  status.type === "success" ? "status-success" : "status-error"
-                } animate-fade-in`}
-              >
-                <p className="font-medium">
-                  {status.type === "success" ? "✓" : "⚠"} {status.message}
-                </p>
-              </div>
-            )}
-          </form>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Add Transaction</h1>
+          <Link href="/" className="text-sm text-gray-400 hover:text-white">
+            ← Back
+          </Link>
         </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="card">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="amount" className="mb-2 block text-sm font-medium">
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  id="amount"
+                  name="amount"
+                  value={formData.amount || ""}
+                  onChange={handleInputChange}
+                  className="form-control"
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="type" className="mb-2 block text-sm font-medium">
+                  Category
+                </label>
+                <select
+                  id="type"
+                  name="type"
+                  value={formData.type}
+                  onChange={handleInputChange}
+                  className="form-control"
+                  required
+                  disabled={isLoading || categories.length === 0}
+                >
+                  <option value="">Select category</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="note" className="mb-2 block text-sm font-medium">
+                  Notes <span className="text-gray-500">(optional)</span>
+                </label>
+                <textarea
+                  id="note"
+                  name="note"
+                  value={formData.note}
+                  onChange={handleInputChange}
+                  className="form-control"
+                  placeholder="Add notes..."
+                  rows={3}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <button type="submit" className="btn w-full" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Transaction"}
+              </button>
+
+              {status.type && (
+                <div
+                  className={`rounded-lg p-3 text-sm ${
+                    status.type === "success"
+                      ? "bg-green-500/10 text-green-400"
+                      : "bg-red-500/10 text-red-400"
+                  }`}
+                  role="alert"
+                >
+                  {status.message}
+                </div>
+              )}
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   );
