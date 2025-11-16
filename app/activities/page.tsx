@@ -20,6 +20,17 @@ export default function ActivityTracker() {
   const [message, setMessage] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
 
+  // Format time to 12-hour format
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const formattedHours = hours % 12 || 12;
+    const formattedMinutes = minutes.toString().padStart(2, "0");
+    return `${formattedHours}:${formattedMinutes}${ampm}`;
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -138,13 +149,15 @@ export default function ActivityTracker() {
         {currentActivity && (
           <div className="mb-6 animate-fade-in">
             <div className="flex items-center gap-3 rounded-lg border border-accent-green/20 bg-accent-green/5 p-4">
-              <div className="relative flex h-3 w-3">
+              <div className="relative flex h-3 w-3 shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-green opacity-75"></span>
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-accent-green"></span>
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-primary-subtle">Currently Active</p>
-                <p className="font-medium text-primary">{currentActivity.name}</p>
+                <p className="font-medium text-primary">
+                  {formatTime(currentActivity.startTime)} {currentActivity.name}
+                </p>
               </div>
             </div>
           </div>
