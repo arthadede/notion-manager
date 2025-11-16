@@ -5,8 +5,8 @@ const notion = new Client({
   auth: process.env.NOTION_API_KEY,
 });
 
-const DATABASE_ID = process.env.NOTION_DATABASE_ID || "";
-const TRANSACTIONS_DATABASE_ID = process.env.NOTION_TRANSACTIONS_DATABASE_ID || "";
+const ACTIVITIES_DATABASE_ID = process.env.NOTION_ACTIVITIES_DATABASE_ID || "";
+const TRANSACTIONS_ACTIVITIES_DATABASE_ID = process.env.NOTION_TRANSACTIONS_DATABASE_ID || "";
 
 export interface Activity {
   id: string;
@@ -36,7 +36,7 @@ const parseActivity = (page): Activity => ({
 export async function getCurrentActivity(): Promise<Activity | null> {
   try {
     const response = await notion.databases.query({
-      database_id: DATABASE_ID,
+      database_id: ACTIVITIES_DATABASE_ID,
       filter: {
         property: "End Time",
         date: { is_empty: true },
@@ -59,7 +59,7 @@ export async function getCurrentActivity(): Promise<Activity | null> {
 export async function getActivities(): Promise<string[]> {
   try {
     const database = await notion.databases.retrieve({
-      database_id: DATABASE_ID,
+      database_id: ACTIVITIES_DATABASE_ID,
     });
 
     const kindProperty = database.properties.Kind;
@@ -91,7 +91,7 @@ export async function updateActivity(data: {
     }
 
     const newPage = await notion.pages.create({
-      parent: { database_id: DATABASE_ID },
+      parent: { database_id: ACTIVITIES_DATABASE_ID },
       properties: {
         Name: { title: [] },
         Kind: { select: { name: newActivityName } },
@@ -145,7 +145,7 @@ export async function createTransaction(data: {
     }
 
     const newPage = await notion.pages.create({
-      parent: { database_id: TRANSACTIONS_DATABASE_ID },
+      parent: { database_id: TRANSACTIONS_ACTIVITIES_DATABASE_ID },
       properties: pageProperties,
     });
 

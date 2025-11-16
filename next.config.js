@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
   env: {
     NOTION_API_KEY: process.env.NOTION_API_KEY,
-    NOTION_DATABASE_ID: process.env.NOTION_DATABASE_ID,
+    NOTION_ACTIVITIES_DATABASE_ID: process.env.NOTION_ACTIVITIES_DATABASE_ID,
+    NOTION_TRANSACTIONS_DATABASE_ID: process.env.NOTION_TRANSACTIONS_DATABASE_ID,
   },
 };
 

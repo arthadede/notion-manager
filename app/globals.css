@@ -136,6 +136,21 @@ body {
   }
 }
 
+.text-3xl {
+  font-size: var(--font-size-3xl);
+  line-height: 1.1;
+}
+
+.text-2xl {
+  font-size: var(--font-size-2xl);
+  line-height: 1.2;
+}
+
+.text-xl {
+  font-size: var(--font-size-xl);
+  line-height: 1.25;
+}
+
 .text-responsive {
   font-size: var(--font-size-base);
 }
@@ -155,6 +170,10 @@ body {
 
 .text-gray-400 {
   color: var(--color-text-secondary);
+}
+
+.text-gray-500 {
+  color: #6b7280;
 }
 
 .text-gray-600 {
@@ -184,6 +203,10 @@ body {
 
 .font-bold {
   font-weight: 700;
+}
+
+.font-semibold {
+  font-weight: 600;
 }
 
 .font-medium {
@@ -255,6 +278,14 @@ body {
   margin-bottom: 3rem;
 }
 
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -263,8 +294,39 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
 .mt-8 {
   margin-top: 2rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.p-3 {
+  padding: 0.75rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
 }
 
 /* ============================================
@@ -278,12 +340,60 @@ body {
   align-items: center;
 }
 
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
 .gap-2 {
   gap: 0.5rem;
 }
 
+.gap-4 {
+  gap: 1rem;
+}
+
 .block {
   display: block;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.w-2 {
+  width: 0.5rem;
+}
+
+.h-2 {
+  height: 0.5rem;
+}
+
+.h-10 {
+  height: 2.5rem;
+}
+
+.h-20 {
+  height: 5rem;
+}
+
+.max-w-md {
+  max-width: 28rem;
+}
+
+.max-w-lg {
+  max-width: 32rem;
+}
+
+.max-w-xl {
+  max-width: 36rem;
+}
+
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem;
 }
 
 .space-y-6 > :not([hidden]) ~ :not([hidden]) {
@@ -616,116 +726,6 @@ select.form-control:focus {
 }
 
 /* ============================================
-   Navigation Styles
-   ============================================ */
-.nav {
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: 0.75rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
-  background-color: rgba(24, 24, 27, 0.95);
-}
-
-.nav-container {
-  max-width: 42rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-@media (min-width: 640px) {
-  .nav-container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-.nav-brand {
-  flex-shrink: 0;
-}
-
-.nav-title {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.nav-links {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.nav-link {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  text-decoration: none;
-  color: var(--color-text-secondary);
-  transition: var(--transition-base);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  position: relative;
-}
-
-.nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--color-text);
-}
-
-.nav-link.active {
-  background-color: var(--color-accent);
-  color: #000;
-}
-
-.nav-link.active:hover {
-  background-color: #16a34a;
-  color: #000;
-}
-
-.nav-link.placeholder {
-  width: 80px;
-  height: 32px;
-  background-color: #374151;
-  border-radius: 0.375rem;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.nav-link-text {
-  position: relative;
-  z-index: 1;
-}
-
-/* Mobile Navigation Adjustments */
-@media (max-width: 639px) {
-  .nav {
-    padding: 0.5rem 0;
-  }
-
-  .nav-title {
-    font-size: var(--font-size-base);
-  }
-
-  .nav-link {
-    padding: 0.375rem 0.75rem;
-    font-size: var(--font-size-xs);
-  }
-
-  .nav-link.placeholder {
-    width: 60px;
-    height: 28px;
-  }
-}
-
-/* ============================================
    Print Styles
    ============================================ */
 @media print {
@@ -746,10 +746,6 @@ select.form-control:focus {
   .skeleton-loading {
     background: #f0f0f0 !important;
     animation: none !important;
-  }
-
-  .nav {
-    display: none;
   }
 }
 
@@ -777,6 +773,14 @@ select.form-control:focus {
 /* ============================================
    Scale Transform Utility
    ============================================ */
-.scale-105 {
+.hover\:scale-102:hover {
+  transform: scale(1.02);
+}
+
+.hover\:scale-105:hover {
   transform: scale(1.05);
+}
+
+.hover\:transform:hover {
+  transform: translateZ(0);
 }
