@@ -24,7 +24,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <h1 className="mb-8 text-center text-3xl font-bold">Tracker</h1>
 
         <div className="space-y-4" role="main">
@@ -32,13 +32,13 @@ export default function HomePage() {
             <Link
               key={feature.href}
               href={feature.href}
-              className="card block p-6 transition-all hover:scale-102 focus-visible"
+              className="card block px-6 py-8 transition-all hover:scale-102 focus-visible"
             >
               <div className="flex items-center gap-4">
                 <div className="text-3xl" aria-hidden="true">
                   {feature.icon}
                 </div>
-                <h2 className="text-xl font-semibold text-white">{feature.title}</h2>
+                <h2 className="text-2xl font-semibold text-white">{feature.title}</h2>
               </div>
             </Link>
           ))}

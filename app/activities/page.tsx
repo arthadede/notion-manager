@@ -116,7 +116,7 @@ export default function ActivityTracker() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Activity Tracker</h1>
           <Link href="/" className="text-sm text-gray-400 hover:text-white">

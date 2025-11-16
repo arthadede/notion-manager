@@ -115,7 +115,7 @@ export default function TransactionPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg">
           <div className="card">
             <div className="space-y-4">
               <div className="skeleton h-10 w-full rounded-md"></div>
@@ -131,7 +131,7 @@ export default function TransactionPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Add Transaction</h1>
           <Link href="/" className="text-sm text-gray-400 hover:text-white">
