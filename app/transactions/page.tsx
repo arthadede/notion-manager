@@ -163,11 +163,11 @@ export default function TransactionPage() {
               {/* Amount Input */}
               <div>
                 <label htmlFor="amount" className="mb-2 block text-sm font-medium text-primary">
-                  Amount
+                  Amount (IDR)
                 </label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <span className="text-primary-subtle">$</span>
+                    <span className="text-primary-subtle">Rp</span>
                   </div>
                   <input
                     type="number"
@@ -175,9 +175,9 @@ export default function TransactionPage() {
                     name="amount"
                     value={formData.amount || ""}
                     onChange={handleInputChange}
-                    className="input pl-8"
-                    placeholder="0.00"
-                    step="0.01"
+                    className="input pl-12"
+                    placeholder="0"
+                    step="1"
                     min="0"
                     required
                     disabled={isLoading}
