@@ -157,6 +157,7 @@ export default function ActivityTracker() {
                 <p className="text-xs text-primary-subtle">Currently Active</p>
                 <p className="font-medium text-primary">
                   {formatTime(currentActivity.startTime)} {currentActivity.name}
+                  {currentActivity.notes && ` - ${currentActivity.notes}`}
                 </p>
               </div>
             </div>
