@@ -6,7 +6,7 @@ const notion = new Client({
 });
 
 const ACTIVITIES_DATABASE_ID = process.env.NOTION_ACTIVITIES_DATABASE_ID || "";
-const TRANSACTIONS_DATABASE_ID = process.env.NOTION_TRANSACTIONS_DATABASE_ID || "";
+const TRANSACTIONS_ACTIVITIES_DATABASE_ID = process.env.NOTION_TRANSACTIONS_DATABASE_ID || "";
 
 export interface Activity {
   id: string;

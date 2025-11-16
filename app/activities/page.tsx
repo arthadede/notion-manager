@@ -68,11 +68,7 @@ export default function ActivityTracker() {
 
   const LoadingSkeleton = () => (
     <div className="animate-fade-in" aria-label="Loading activity tracker" role="status" aria-live="polite">
-      <div className="mb-12">
-        <div className="skeleton mb-4 h-12 w-48 rounded-lg" aria-hidden="true"></div>
-        <div className="skeleton h-6 w-64 rounded-md" aria-hidden="true"></div>
-        <p className="sr-only">Loading application data...</p>
-      </div>
+      <p className="sr-only">Loading application data...</p>
 
       <div className="card">
         <div className="space-y-6">
@@ -89,10 +85,6 @@ export default function ActivityTracker() {
           <div className="skeleton-loading h-12 w-full rounded-md" aria-hidden="true"></div>
         </div>
       </div>
-
-      <footer className="mt-8 text-center">
-        <div className="skeleton mx-auto h-4 w-32 rounded-md" aria-hidden="true"></div>
-      </footer>
     </div>
   );
 
@@ -145,29 +137,8 @@ export default function ActivityTracker() {
               <LoadingSkeleton />
             ) : (
               <>
-                {/* Header */}
-                <div className="animate-slide-in mb-12" style={{ animationDelay: "0.1s" }}>
-                  <h1 className="mb-4 text-5xl font-bold">Activity Tracker</h1>
-                  {currentActivity && (
-                    <div className="text-responsive flex items-center gap-2 text-gray-400">
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" aria-hidden="true"></div>
-                      <span className="text-sm">
-                        Currently tracking:{" "}
-                        <span className="font-medium text-white">
-                          {currentActivity.name} -{" "}
-                          {new Date(currentActivity.startTime).toLocaleTimeString("en-US", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })}
-                        </span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-
                 {/* Main Card */}
-                <div className="card animate-fade-in" style={{ animationDelay: "0.2s" }} role="main" id="main">
+                <div className="card animate-fade-in" role="main" id="main">
                   <div className="space-y-6">
                     {/* Activity Dropdown */}
                     <div>

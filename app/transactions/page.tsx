@@ -137,8 +137,6 @@ export default function TransactionPage() {
     <div className="min-h-screen">
       <div className="py-responsive container">
         <div className="animate-fade-in">
-          <h1 className="mb-responsive text-5xl font-bold">Add Transaction</h1>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="card">
               <div className="space-y-6">
