@@ -73,14 +73,6 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
-
-        {/* Footer */}
-        <div className="mt-16 text-center">
-          <p className="text-sm text-primary-subtle">
-            Powered by{" "}
-            <span className="font-medium text-primary-muted transition-colors hover:text-primary">Notion API</span>
-          </p>
-        </div>
       </div>
     </div>
   );
