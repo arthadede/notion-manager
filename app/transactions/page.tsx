@@ -102,6 +102,9 @@ export default function TransactionPage() {
         type: "",
         note: "",
       });
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setStatus({ type: null, message: "" }), 3000);
     } catch (error) {
       setStatus({
         type: "error",
@@ -112,57 +115,79 @@ export default function TransactionPage() {
     }
   };
 
+  const LoadingSkeleton = () => (
+    <div className="card animate-pulse">
+      <div className="space-y-6">
+        <div className="h-12 w-full rounded-lg bg-surface-hover"></div>
+        <div className="h-12 w-full rounded-lg bg-surface-hover"></div>
+        <div className="h-24 w-full rounded-lg bg-surface-hover"></div>
+        <div className="h-12 w-2/3 rounded-lg bg-surface-hover"></div>
+      </div>
+    </div>
+  );
+
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-lg">
-          <div className="card">
-            <div className="space-y-4">
-              <div className="skeleton h-10 w-full rounded-md"></div>
-              <div className="skeleton h-10 w-full rounded-md"></div>
-              <div className="skeleton h-20 w-full rounded-md"></div>
-              <div className="skeleton h-10 w-full rounded-md"></div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
+        <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8 lg:py-16">
+          <LoadingSkeleton />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-lg">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Add Transaction</h1>
-          <Link href="/" className="text-sm text-gray-400 hover:text-white">
-            ← Back
+    <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
+      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8 lg:py-16">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">Add Transaction</h1>
+            <p className="mt-1 text-sm text-primary-subtle">Track your financial activities</p>
+          </div>
+          <Link
+            href="/"
+            className="group flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-primary-muted transition-all duration-200 hover:border-border-hover hover:bg-surface-hover hover:text-primary"
+          >
+            <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back
           </Link>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="card">
-            <div className="space-y-4">
+          <div className="card animate-slide-up">
+            <div className="space-y-6">
+              {/* Amount Input */}
               <div>
-                <label htmlFor="amount" className="mb-2 block text-sm font-medium">
+                <label htmlFor="amount" className="mb-2 block text-sm font-medium text-primary">
                   Amount
                 </label>
-                <input
-                  type="number"
-                  id="amount"
-                  name="amount"
-                  value={formData.amount || ""}
-                  onChange={handleInputChange}
-                  className="form-control"
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  required
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <span className="text-primary-subtle">$</span>
+                  </div>
+                  <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    value={formData.amount || ""}
+                    onChange={handleInputChange}
+                    className="input pl-8"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
 
+              {/* Category Select */}
               <div>
-                <label htmlFor="type" className="mb-2 block text-sm font-medium">
+                <label htmlFor="type" className="mb-2 block text-sm font-medium text-primary">
                   Category
                 </label>
                 <select
@@ -170,11 +195,11 @@ export default function TransactionPage() {
                   name="type"
                   value={formData.type}
                   onChange={handleInputChange}
-                  className="form-control"
+                  className="select"
                   required
                   disabled={isLoading || categories.length === 0}
                 >
-                  <option value="">Select category</option>
+                  <option value="">Choose a category...</option>
                   {categories.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -183,36 +208,71 @@ export default function TransactionPage() {
                 </select>
               </div>
 
+              {/* Notes Textarea */}
               <div>
-                <label htmlFor="note" className="mb-2 block text-sm font-medium">
-                  Notes <span className="text-gray-500">(optional)</span>
+                <label htmlFor="note" className="mb-2 block text-sm font-medium text-primary">
+                  Notes{" "}
+                  <span className="font-normal text-primary-subtle">(optional)</span>
                 </label>
                 <textarea
                   id="note"
                   name="note"
                   value={formData.note}
                   onChange={handleInputChange}
-                  className="form-control"
-                  placeholder="Add notes..."
-                  rows={3}
+                  className="textarea"
+                  placeholder="Add transaction details..."
+                  rows={4}
                   disabled={isLoading}
                 />
               </div>
 
-              <button type="submit" className="btn w-full" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Transaction"}
+              {/* Submit Button */}
+              <button type="submit" className="btn-primary" disabled={isLoading}>
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating...
+                  </span>
+                ) : (
+                  "Create Transaction"
+                )}
               </button>
 
+              {/* Status Message */}
               {status.type && (
                 <div
-                  className={`rounded-lg p-3 text-sm ${
-                    status.type === "success"
-                      ? "bg-green-500/10 text-green-400"
-                      : "bg-red-500/10 text-red-400"
+                  className={`animate-fade-in ${
+                    status.type === "success" ? "alert-success" : "alert-error"
                   }`}
                   role="alert"
                 >
-                  {status.message}
+                  <div className="flex items-center gap-2">
+                    {status.type === "success" ? (
+                      <svg className="h-5 w-5 text-accent-green" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 text-accent-red" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                    <span>{status.message}</span>
+                  </div>
                 </div>
               )}
             </div>

@@ -1,663 +1,135 @@
-/* ============================================
-   CSS Variables & Theming
-   ============================================ */
-:root {
-  --color-primary: #000;
-  --color-secondary: #18181b;
-  --color-accent: #22c55e;
-  --color-accent-error: #ef4444;
-  --color-text: #fff;
-  --color-text-secondary: #9ca3af;
-  --color-text-muted: #6b7280;
-  --color-border: #27272a;
-  --color-border-focus: #fff;
-  --color-background: #000;
-  --color-surface: #18181b;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  --transition-base: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-glow: 0 0 20px rgb(34 197 94 / 0.3);
-  --shadow-glow-error: 0 0 20px rgb(239 68 68 / 0.3);
+  html {
+    @apply scroll-smooth;
+  }
 
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
-  --font-size-5xl: 3rem;
-}
-
-/* ============================================
-   Base Styles & Reset
-   ============================================ */
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-    "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-background);
-  color: var(--color-text);
-  line-height: 1.6;
-}
-
-/* ============================================
-   Layout Utilities
-   ============================================ */
-.min-h-screen {
-  min-height: 100vh;
-}
-
-.max-w-2xl {
-  max-width: 42rem;
-}
-
-.mx-auto {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* ============================================
-   Responsive Design Utilities
-   ============================================ */
-/* Mobile First Approach */
-.container {
-  width: 100%;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-@media (min-width: 640px) {
-  .container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+  body {
+    @apply bg-background text-primary antialiased;
   }
 }
 
-@media (min-width: 1024px) {
-  .container {
-    max-width: 42rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
+@layer components {
+  /* Custom Card Component */
+  .card {
+    @apply rounded-lg border border-border bg-surface p-6 shadow-soft transition-all duration-300 hover:border-border-hover hover:shadow-glow;
+  }
+
+  /* Custom Button Component */
+  .btn-primary {
+    @apply w-full rounded-lg bg-white px-4 py-3 font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-100 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:bg-surface disabled:text-primary-subtle disabled:hover:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply w-full rounded-lg border border-border bg-surface px-4 py-3 font-medium text-primary transition-all duration-300 hover:border-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Custom Form Controls */
+  .input {
+    @apply w-full rounded-lg border border-border bg-background px-4 py-3 text-primary transition-all duration-200 placeholder:text-primary-subtle focus:border-border-focus focus:outline-none focus:ring-2 focus:ring-white/10 hover:border-border-hover hover:bg-background-secondary;
+  }
+
+  .select {
+    @apply input appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyMCAyMCI+PHBhdGggc3Ryb2tlPSIjNmI3MjgwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMS41IiBkPSJtNiA4IDQgNCA0LTQiLz48L3N2Zz4=')] bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10;
+  }
+
+  .textarea {
+    @apply input min-h-[100px] resize-y;
+  }
+
+  /* Status Messages */
+  .alert {
+    @apply rounded-lg border p-4 transition-all duration-300;
+  }
+
+  .alert-success {
+    @apply alert border-accent-green/20 bg-accent-green/10 text-primary hover:shadow-glow-green;
+  }
+
+  .alert-error {
+    @apply alert border-accent-red/20 bg-accent-red/10 text-primary hover:shadow-glow-red;
+  }
+
+  /* Loading Skeleton */
+  .skeleton {
+    @apply animate-shimmer rounded-lg bg-gradient-to-r from-surface via-surface-hover to-surface bg-[length:200%_100%];
+  }
+
+  /* Feature Card */
+  .feature-card {
+    @apply cursor-pointer rounded-xl border border-border bg-surface p-8 transition-all duration-300 hover:-translate-y-1 hover:border-border-hover hover:shadow-glow;
+  }
+
+  /* Navigation Link */
+  .nav-link {
+    @apply text-sm text-primary-subtle transition-colors duration-200 hover:text-primary;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-accent-green/20 text-accent-green;
+  }
+
+  .badge-primary {
+    @apply badge bg-accent/20 text-accent;
   }
 }
 
-/* Responsive Spacing */
-.px-4 {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-.py-16 {
-  padding-top: 4rem;
-  padding-bottom: 4rem;
-}
-
-@media (max-width: 639px) {
-  .py-responsive {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
   }
 
-  .mb-responsive {
-    margin-bottom: 1.5rem;
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
   }
-}
 
-/* Responsive Typography */
-.text-5xl {
-  font-size: var(--font-size-5xl);
-  line-height: 1;
-}
-
-@media (max-width: 639px) {
-  .text-5xl {
-    font-size: var(--font-size-3xl);
-    line-height: 1.1;
+  /* Custom animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-}
 
-.text-3xl {
-  font-size: var(--font-size-3xl);
-  line-height: 1.1;
-}
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-.text-2xl {
-  font-size: var(--font-size-2xl);
-  line-height: 1.2;
-}
-
-.text-xl {
-  font-size: var(--font-size-xl);
-  line-height: 1.25;
-}
-
-.text-responsive {
-  font-size: var(--font-size-base);
-}
-
-@media (min-width: 640px) {
-  .text-responsive {
-    font-size: var(--font-size-lg);
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
   }
 }
 
-/* ============================================
-   Typography
-   ============================================ */
-.text-white {
-  color: var(--color-text);
-}
-
-.text-gray-400 {
-  color: var(--color-text-secondary);
-}
-
-.text-gray-500 {
-  color: #6b7280;
-}
-
-.text-gray-600 {
-  color: var(--color-text-muted);
-}
-
-.text-green-400 {
-  color: #4ade80;
-}
-
-.text-red-400 {
-  color: #f87171;
-}
-
-.text-black {
-  color: #000;
-}
-
-.text-sm {
-  font-size: var(--font-size-sm);
-  line-height: 1.25rem;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-
-.font-semibold {
-  font-weight: 600;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-/* ============================================
-   Colors & Backgrounds
-   ============================================ */
-.bg-black {
-  background-color: var(--color-primary);
-}
-
-.bg-zinc-900 {
-  background-color: var(--color-surface);
-}
-
-.bg-white {
-  background-color: #fff;
-}
-
-.bg-green-500\/10 {
-  background-color: rgb(34 197 94 / 0.1);
-}
-
-.bg-red-500\/10 {
-  background-color: rgb(239 68 68 / 0.1);
-}
-
-.bg-green-500 {
-  background-color: #22c55e;
-}
-
-/* ============================================
-   Borders & Borders
-   ============================================ */
-.border {
-  border-width: 1px;
-}
-
-.border-zinc-800 {
-  border-color: var(--color-border);
-}
-
-.border-green-500\/20 {
-  border-color: rgb(34 197 94 / 0.2);
-}
-
-.border-red-500\/20 {
-  border-color: rgb(239 68 68 / 0.2);
-}
-
-.rounded-lg {
-  border-radius: 0.5rem;
-}
-
-.rounded-md {
-  border-radius: 0.375rem;
-}
-
-.rounded-full {
-  border-radius: 9999px;
-}
-
-/* ============================================
-   Spacing
-   ============================================ */
-.mb-12 {
-  margin-bottom: 3rem;
-}
-
-.mb-8 {
-  margin-bottom: 2rem;
-}
-
-.mb-6 {
-  margin-bottom: 1.5rem;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.mb-3 {
-  margin-bottom: 0.75rem;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-
-.mt-8 {
-  margin-top: 2rem;
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-.px-4 {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-.px-6 {
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-}
-
-.py-8 {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-.p-3 {
-  padding: 0.75rem;
-}
-
-.p-6 {
-  padding: 1.5rem;
-}
-
-/* ============================================
-   Flexbox & Layout
-   ============================================ */
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.gap-4 {
-  gap: 1rem;
-}
-
-.block {
-  display: block;
-}
-
-.w-full {
-  width: 100%;
-}
-
-.w-2 {
-  width: 0.5rem;
-}
-
-.h-2 {
-  height: 0.5rem;
-}
-
-.h-10 {
-  height: 2.5rem;
-}
-
-.h-20 {
-  height: 5rem;
-}
-
-.max-w-md {
-  max-width: 28rem;
-}
-
-.max-w-lg {
-  max-width: 32rem;
-}
-
-.max-w-xl {
-  max-width: 36rem;
-}
-
-.space-y-4 > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 1rem;
-}
-
-.space-y-6 > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 1.5rem;
-}
-
-/* ============================================
-   Enhanced Form Styles
-   ============================================ */
-.form-control {
-  background-color: var(--color-primary);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
-  transition: var(--transition-base);
-  font-size: var(--font-size-base);
-}
-
-.form-control:hover {
-  border-color: #4b5563;
-  background-color: #0a0a0a;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-  background-color: #0a0a0a;
-}
-
-.form-control::placeholder {
-  color: var(--color-text-muted);
-  transition: var(--transition-base);
-}
-
-.form-control:focus::placeholder {
-  color: transparent;
-}
-
-/* Enhanced Select Styles */
-select.form-control {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-}
-
-select.form-control:hover {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-}
-
-select.form-control:focus {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-}
-
-/* ============================================
-   Enhanced Button Styles
-   ============================================ */
-.btn {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: #fff;
-  color: #000;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition-smooth);
-  position: relative;
-  overflow: hidden;
-  transform: translateY(0);
-}
-
-.btn:hover:not(:disabled) {
-  background-color: #f3f4f6;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-}
-
-.btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
-}
-
-.btn:disabled {
-  background-color: #1f2937;
-  color: #4b5563;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Loading Button State */
-.btn.loading {
-  color: transparent;
-}
-
-.btn.loading::after {
-  content: "";
-  position: absolute;
-  width: 1rem;
-  height: 1rem;
-  top: 50%;
-  left: 50%;
-  margin-left: -0.5rem;
-  margin-top: -0.5rem;
-  border: 2px solid #000;
-  border-radius: 50%;
-  border-top-color: transparent;
-  animation: spin 0.6s linear infinite;
-}
-
-/* ============================================
-   Status & State Styles
-   ============================================ */
-.status-indicator {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid;
-  margin-top: 2rem;
-  transition: var(--transition-smooth);
-}
-
-.status-indicator:hover {
-  transform: translateX(4px);
-}
-
-.status-success {
-  background-color: var(--color-accent);
-  background-color: rgb(34 197 94 / 0.1);
-  border-color: rgb(34 197 94 / 0.2);
-  color: var(--color-text);
-}
-
-.status-error {
-  background-color: var(--color-accent-error);
-  background-color: rgb(239 68 68 / 0.1);
-  border-color: rgb(239 68 68 / 0.2);
-  color: var(--color-text);
-}
-
-.status-indicator:hover.status-success {
-  box-shadow: var(--shadow-glow);
-}
-
-.status-indicator:hover.status-error {
-  box-shadow: var(--shadow-glow-error);
-}
-
-/* ============================================
-   Card & Container Styles
-   ============================================ */
-.card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  padding: 2rem;
-  transition: var(--transition-smooth);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  border-color: #374151;
-  transform: translateY(-2px);
-}
-
-.card:focus-within {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-}
-
-/* ============================================
-   Animations & Keyframes
-   ============================================ */
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* ============================================
-   Accessibility Enhancements
-   ============================================ */
-/* High contrast focus indicators */
-.focus-visible:focus {
-  outline: 2px solid var(--color-border-focus);
-  outline-offset: 2px;
-}
-
-/* Skip to main content link for screen readers */
-.skip-to-main {
-  position: absolute;
-  top: -40px;
-  left: 6px;
-  background: var(--color-primary);
-  color: var(--color-text);
-  padding: 8px;
-  text-decoration: none;
-  z-index: 9999;
-}
-
-.skip-to-main:focus {
-  top: 6px;
-}
-
-/* Enhanced text selection */
-::selection {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: var(--color-text);
-}
-
-/* Reduced motion support */
+/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -668,119 +140,9 @@ select.form-control:focus {
   }
 }
 
-/* ============================================
-   Touch & Mobile Enhancements
-   ============================================ */
+/* Touch devices */
 @media (hover: none) {
-  .btn:hover {
-    background-color: #fff;
+  .hover\:scale-105:hover {
     transform: none;
-    box-shadow: none;
   }
-
-  .form-control:hover {
-    border-color: var(--color-border);
-    background-color: var(--color-primary);
-  }
-
-  .card:hover {
-    transform: none;
-    box-shadow: none;
-  }
-}
-
-/* Larger tap targets for mobile */
-@media (max-width: 639px) {
-  .btn {
-    min-height: 48px;
-    font-size: var(--font-size-lg);
-  }
-
-  .form-control {
-    min-height: 48px;
-    font-size: var(--font-size-lg);
-  }
-}
-
-/* ============================================
-   Loading Skeleton Styles
-   ============================================ */
-.skeleton {
-  background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.skeleton-loading {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  background-color: #27272a;
-}
-
-/* ============================================
-   Print Styles
-   ============================================ */
-@media print {
-  .btn,
-  .form-control {
-    border: 1px solid #000 !important;
-    background: #fff !important;
-    color: #000 !important;
-  }
-
-  .card {
-    border: 1px solid #000 !important;
-    background: #fff !important;
-    color: #000 !important;
-  }
-
-  .skeleton,
-  .skeleton-loading {
-    background: #f0f0f0 !important;
-    animation: none !important;
-  }
-}
-
-/* ============================================
-   Grid Layout Utilities
-   ============================================ */
-.grid {
-  display: grid;
-}
-
-.grid-cols-1 {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
-.grid-cols-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (min-width: 768px) {
-  .md\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* ============================================
-   Scale Transform Utility
-   ============================================ */
-.hover\:scale-102:hover {
-  transform: scale(1.02);
-}
-
-.hover\:scale-105:hover {
-  transform: scale(1.05);
-}
-
-.hover\:transform:hover {
-  transform: translateZ(0);
 }
