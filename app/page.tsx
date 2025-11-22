@@ -26,6 +26,13 @@ export default function HomePage() {
       icon: "💳",
       gradient: "from-green-500/10 to-emerald-500/10",
     },
+    {
+      title: "Book Reader",
+      description: "Read and manage your digital book collection",
+      href: "https://histweety-reader.vercel.app/",
+      icon: "📚",
+      gradient: "from-orange-500/10 to-amber-500/10",
+    },
   ];
 
   return (
