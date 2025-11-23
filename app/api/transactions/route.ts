@@ -1,5 +1,23 @@
-import { createTransaction } from "@/lib/notion";
+import { createTransaction, getTransactionsByMonth } from "@/lib/notion";
 import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const year = searchParams.get("year");
+    const month = searchParams.get("month");
+
+    if (!year || !month) {
+      return NextResponse.json({ error: "Missing required parameters: year, month" }, { status: 400 });
+    }
+
+    const transactions = await getTransactionsByMonth(parseInt(year), parseInt(month));
+    return NextResponse.json(transactions);
+  } catch (error) {
+    console.error("Transaction fetch error:", error);
+    return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 });
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

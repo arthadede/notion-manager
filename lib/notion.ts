@@ -164,3 +164,32 @@ const parseTransaction = (page): Transaction => ({
   date: page.properties["Pay Date"]?.date?.start || "",
   notes: page.properties.Note?.rich_text?.[0]?.plain_text || "",
 });
+
+export async function getTransactionsByMonth(year: number, month: number): Promise<Transaction[]> {
+  try {
+    const startDate = new Date(year, month - 1, 1).toISOString().split("T")[0];
+    const endDate = new Date(year, month, 0).toISOString().split("T")[0];
+
+    const response = await notion.databases.query({
+      database_id: TRANSACTIONS_ACTIVITIES_DATABASE_ID,
+      filter: {
+        and: [
+          {
+            property: "Pay Date",
+            date: { on_or_after: startDate },
+          },
+          {
+            property: "Pay Date",
+            date: { on_or_before: endDate },
+          },
+        ],
+      },
+      sorts: [{ property: "Pay Date", direction: "descending" }],
+    });
+
+    return response.results.map(parseTransaction);
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    throw new Error("Failed to fetch transactions");
+  }
+}
