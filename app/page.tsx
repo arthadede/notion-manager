@@ -33,6 +33,13 @@ export default function HomePage() {
       icon: "📚",
       gradient: "from-orange-500/10 to-amber-500/10",
     },
+    {
+      title: "SSE Logs",
+      description: "Monitor real-time server logs and events",
+      href: "/sse-logs",
+      icon: "📡",
+      gradient: "from-cyan-500/10 to-blue-500/10",
+    },
   ];
 
   return (
