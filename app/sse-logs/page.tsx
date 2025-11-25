@@ -305,49 +305,50 @@ export default function SSELogsPage() {
                   </div>
                 </div>
               ) : (
-                logs.map((log) => (
-                  <div
-                    key={log.id}
-                    className={`group animate-slide-up rounded-lg border p-3 transition-all hover:shadow-md ${getLevelColor(log.level)}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Icon */}
-                      <span className="text-lg" aria-label={log.level}>
-                        {getLevelIcon(log.level)}
-                      </span>
+                <>
+                  {logs.map((log) => {
+                    const logDataString = log.data ? String(JSON.stringify(log.data, null, 2)) : null;
 
-                      {/* Content */}
-                      <div className="flex-1 space-y-1">
-                        {/* Header: Time + Level */}
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="font-mono text-primary-subtle">
-                            {formatTime(log.timestamp)}
+                    return (
+                      <div
+                        key={log.id}
+                        className={`group animate-slide-up rounded-lg border p-3 transition-all hover:shadow-md ${getLevelColor(log.level)}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-lg" aria-label={log.level}>
+                            {getLevelIcon(log.level)}
                           </span>
-                          <span className="rounded bg-background/50 px-2 py-0.5 font-mono font-semibold uppercase tracking-wider">
-                            {log.level}
-                          </span>
-                        </div>
 
-                        {/* Message */}
-                        <div className="text-sm font-medium leading-relaxed">
-                          {log.message}
-                        </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="font-mono text-primary-subtle">
+                                {formatTime(log.timestamp)}
+                              </span>
+                              <span className="rounded bg-background/50 px-2 py-0.5 font-mono font-semibold uppercase tracking-wider">
+                                {log.level}
+                              </span>
+                            </div>
 
-                        {/* Additional Data */}
-                        {log.data && (
-                          <details className="mt-2">
-                            <summary className="cursor-pointer text-xs text-primary-subtle hover:text-primary-muted">
-                              View raw data
-                            </summary>
-                            <pre className="mt-2 overflow-x-auto rounded bg-background/50 p-2 text-xs text-primary-subtle">
-                              {JSON.stringify(log.data, null, 2)}
-                            </pre>
-                          </details>
-                        )}
+                            <div className="text-sm font-medium leading-relaxed">
+                              {log.message}
+                            </div>
+
+                            {logDataString && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-xs text-primary-subtle hover:text-primary-muted">
+                                  View raw data
+                                </summary>
+                                <pre className="mt-2 overflow-x-auto rounded bg-background/50 p-2 text-xs text-primary-subtle">
+                                  {logDataString}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))
+                    );
+                  })}
+                </>
               )}
               <div ref={logsEndRef} />
             </div>
