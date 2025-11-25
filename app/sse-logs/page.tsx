@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 interface LogEntry {
@@ -8,7 +8,7 @@ interface LogEntry {
   timestamp: Date;
   level: "info" | "warn" | "error" | "success" | "debug";
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 const SSE_ENDPOINT = "https://histweety-notification.vercel.app/sse";
@@ -19,6 +19,17 @@ export default function SSELogsPage() {
   const [autoScroll, setAutoScroll] = useState(true);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+
+  const addLog = useCallback((level: LogEntry["level"], message: string, data?: unknown) => {
+    const newLog: LogEntry = {
+      id: `${Date.now()}-${Math.random()}`,
+      timestamp: new Date(),
+      level,
+      message,
+      data,
+    };
+    setLogs((prev) => [...prev, newLog]);
+  }, []);
 
   useEffect(() => {
     // Connect to SSE endpoint
@@ -54,7 +65,7 @@ export default function SSELogsPage() {
             const message = data.message || data.msg || data.text || JSON.stringify(data);
 
             addLog(level, message, data);
-          } catch (error) {
+          } catch {
             // If not JSON, treat as plain text
             addLog("info", event.data);
           }
@@ -75,7 +86,7 @@ export default function SSELogsPage() {
         };
 
         // Listen for custom event types
-        eventSource.addEventListener("notification", (event: any) => {
+        eventSource.addEventListener("notification", (event: MessageEvent) => {
           try {
             const data = JSON.parse(event.data);
             addLog("success", `Notification: ${data.message || JSON.stringify(data)}`, data);
@@ -99,24 +110,13 @@ export default function SSELogsPage() {
         eventSourceRef.current = null;
       }
     };
-  }, []);
+  }, [addLog]);
 
   useEffect(() => {
     if (autoScroll && logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [logs, autoScroll]);
-
-  const addLog = (level: LogEntry["level"], message: string, data?: any) => {
-    const newLog: LogEntry = {
-      id: `${Date.now()}-${Math.random()}`,
-      timestamp: new Date(),
-      level,
-      message,
-      data,
-    };
-    setLogs((prev) => [...prev, newLog]);
-  };
 
   const clearLogs = () => {
     setLogs([]);
