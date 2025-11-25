@@ -47,13 +47,13 @@ export default function SSELogsPage() {
 
         eventSource.onmessage = (event) => {
           try {
-            const data = JSON.parse(event.data);
+            const data = JSON.parse(event.data) as Record<string, unknown>;
 
             // Determine log level from data
             let level: LogEntry["level"] = "info";
-            if (data.level) {
-              level = data.level.toLowerCase();
-            } else if (data.type) {
+            if (data.level && typeof data.level === "string") {
+              level = data.level.toLowerCase() as LogEntry["level"];
+            } else if (data.type && typeof data.type === "string") {
               const type = data.type.toLowerCase();
               if (type.includes("error")) level = "error";
               else if (type.includes("warn")) level = "warn";
@@ -61,13 +61,15 @@ export default function SSELogsPage() {
               else if (type.includes("debug")) level = "debug";
             }
 
-            // Extract message
-            const message = data.message || data.msg || data.text || JSON.stringify(data);
+            // Extract message and ensure it's a string
+            const message = String(
+              data.message || data.msg || data.text || JSON.stringify(data)
+            );
 
             addLog(level, message, data);
           } catch {
             // If not JSON, treat as plain text
-            addLog("info", event.data);
+            addLog("info", String(event.data));
           }
         };
 
@@ -88,10 +90,11 @@ export default function SSELogsPage() {
         // Listen for custom event types
         eventSource.addEventListener("notification", (event: MessageEvent) => {
           try {
-            const data = JSON.parse(event.data);
-            addLog("success", `Notification: ${data.message || JSON.stringify(data)}`, data);
+            const data = JSON.parse(event.data) as Record<string, unknown>;
+            const msg = String(data.message || JSON.stringify(data));
+            addLog("success", `Notification: ${msg}`, data);
           } catch {
-            addLog("success", `Notification: ${event.data}`);
+            addLog("success", `Notification: ${String(event.data)}`);
           }
         });
 
