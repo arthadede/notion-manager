@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
+import { tmpdir } from "os";
 
 export interface PushSubscription {
   endpoint: string;
@@ -18,7 +19,18 @@ export interface StoredSubscription extends PushSubscription {
   userAgent?: string;
 }
 
-const SUBSCRIPTIONS_FILE = path.join(process.cwd(), "data", "push-subscriptions.json");
+// Detect if we're in a serverless environment (Vercel, AWS Lambda, etc.)
+const isServerless =
+  process.env.VERCEL === "1" ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined ||
+  process.env.LAMBDA_TASK_ROOT !== undefined;
+
+// Use /tmp in serverless, local data folder otherwise
+const STORAGE_DIR = isServerless
+  ? path.join(tmpdir(), "push-notifications")
+  : path.join(process.cwd(), "data");
+
+const SUBSCRIPTIONS_FILE = path.join(STORAGE_DIR, "push-subscriptions.json");
 
 /**
  * Ensure data directory exists
