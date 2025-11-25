@@ -34,6 +34,32 @@ export default function DebugPage() {
   const [broadcastBody, setBroadcastBody] = useState("This is a test broadcast notification!");
   const [broadcastUrl, setBroadcastUrl] = useState("/");
 
+  useEffect(() => {
+    // Check notification status on mount
+    const checkStatus = async () => {
+      setIsSupported(isNotificationSupported());
+      setIsEnabled(isNotificationEnabled());
+      const subscription = await getCurrentSubscription();
+      setIsSubscribed(!!subscription);
+    };
+
+    // Fetch stats on mount
+    const loadStats = async () => {
+      try {
+        const response = await fetch("/api/notifications/broadcast");
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+
+    checkStatus();
+    loadStats();
+  }, []);
+
   const checkNotificationStatus = async () => {
     setIsSupported(isNotificationSupported());
     setIsEnabled(isNotificationEnabled());
@@ -52,11 +78,6 @@ export default function DebugPage() {
       console.error("Error fetching stats:", error);
     }
   };
-
-  useEffect(() => {
-    checkNotificationStatus();
-    fetchStats();
-  }, []);
 
   const handleEnableNotifications = async () => {
     setLoading(true);
