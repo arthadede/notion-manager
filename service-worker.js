@@ -1,6 +1,10 @@
 // Service Worker for Push Notifications
 // This file is processed by next-pwa
 
+// Workbox manifest placeholder - required by next-pwa
+// This will be replaced with the actual precache manifest during build
+self.__WB_MANIFEST;
+
 // Handle push notification events
 self.addEventListener("push", (event) => {
   console.log("[Service Worker] Push received", event);
