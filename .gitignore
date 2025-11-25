@@ -7,6 +7,12 @@ node_modules
 /.next/
 /out/
 
+# PWA files
+/public/sw.js
+/public/workbox-*.js
+/public/sw.js.map
+/public/workbox-*.js.map
+
 # Debug logs
 npm-debug.log*
 yarn-debug.log*
@@ -40,6 +46,9 @@ logs
 
 # Local files
 .claude
+
+# Push notification subscriptions
+/data/
 
 # Old build files
 dist

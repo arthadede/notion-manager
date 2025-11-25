@@ -40,6 +40,13 @@ export default function HomePage() {
       icon: "📡",
       gradient: "from-cyan-500/10 to-blue-500/10",
     },
+    {
+      title: "Debug Console",
+      description: "Test push notifications and broadcast messages",
+      href: "/debug",
+      icon: "🔧",
+      gradient: "from-red-500/10 to-pink-500/10",
+    },
   ];
 
   return (
