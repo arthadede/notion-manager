@@ -329,7 +329,7 @@ export default function SSELogsPage() {
                               </span>
                             </div>
 
-                            <div className="text-sm font-medium leading-relaxed">
+                            <div className="line-clamp-2 text-sm font-medium leading-relaxed">
                               {log.message}
                             </div>
 
