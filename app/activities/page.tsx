@@ -125,6 +125,43 @@ export default function ActivityTracker() {
     }
   };
 
+  const handleQuickSwitch = async (activityName: string) => {
+    // Don't do anything if clicking the current activity
+    if (currentActivity && currentActivity.name === activityName) {
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+    setSelectedActivity(activityName);
+
+    try {
+      const response = await fetch("/api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentActivityId: currentActivity?.id,
+          newActivityName: activityName,
+          notes: "",
+        }),
+      });
+
+      if (response.ok) {
+        setMessage("Activity updated successfully!");
+        await fetchCurrentActivity();
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("Failed to update activity");
+      }
+    } catch {
+      setMessage("Error updating activity");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8 lg:py-16">
@@ -144,6 +181,43 @@ export default function ActivityTracker() {
             Back
           </Link>
         </div>
+
+        {/* Quick Action Shortcuts */}
+        {!initialLoading && activities.length > 0 && (
+          <div className="mb-6 animate-fade-in">
+            <h2 className="mb-3 text-sm font-medium text-primary">Quick Actions</h2>
+            <div className="flex flex-wrap gap-2">
+              {activities.map((activity) => {
+                const isActive = currentActivity?.name === activity;
+                return (
+                  <button
+                    key={activity}
+                    onClick={() => handleQuickSwitch(activity)}
+                    disabled={loading || isActive}
+                    className={`group relative overflow-hidden rounded-lg border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? "border-accent-green/40 bg-accent-green/10 text-accent-green cursor-default"
+                        : "border-border bg-surface text-primary-muted hover:border-border-hover hover:bg-surface-hover hover:text-primary active:scale-95"
+                    } ${loading && !isActive ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {isActive && (
+                      <span className="absolute inset-0 bg-gradient-to-r from-accent-green/5 to-transparent animate-pulse"></span>
+                    )}
+                    <span className="relative flex items-center gap-2">
+                      {isActive && (
+                        <span className="flex h-2 w-2">
+                          <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-accent-green opacity-75"></span>
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-green"></span>
+                        </span>
+                      )}
+                      {activity}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Current Activity Badge */}
         {currentActivity && (
