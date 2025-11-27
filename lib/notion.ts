@@ -116,12 +116,10 @@ export function getTransactionCategories(): string[] {
 export async function createTransaction(data: {
   amount: number;
   type: string;
-  payDate?: string;
   note?: string;
 }): Promise<Transaction> {
   try {
-    const { amount, type, payDate, note } = data;
-    const today = new Date().toISOString().split("T")[0];
+    const { amount, type, note } = data;
 
     const pageProperties: any = {
       Name: {
@@ -130,11 +128,8 @@ export async function createTransaction(data: {
       Amount: {
         number: amount,
       },
-      Type: {
+      Kind: {
         select: { name: type },
-      },
-      "Pay Date": {
-        date: { start: payDate || today },
       },
     };
 
@@ -160,8 +155,8 @@ const parseTransaction = (page): Transaction => ({
   id: page.id,
   description: page.properties.Name?.title?.[0]?.plain_text || "",
   amount: page.properties.Amount?.number || 0,
-  category: page.properties.Type?.select?.name || "",
-  date: page.properties["Pay Date"]?.date?.start || "",
+  category: page.properties.Kind?.select?.name || "",
+  date: page.properties["Created time"]?.created_time || "",
   notes: page.properties.Note?.rich_text?.[0]?.plain_text || "",
 });
 
@@ -175,16 +170,16 @@ export async function getTransactionsByMonth(year: number, month: number): Promi
       filter: {
         and: [
           {
-            property: "Pay Date",
+            property: "Created time",
             date: { on_or_after: startDate },
           },
           {
-            property: "Pay Date",
+            property: "Created time",
             date: { on_or_before: endDate },
           },
         ],
       },
-      sorts: [{ property: "Pay Date", direction: "descending" }],
+      sorts: [{ property: "Created time", direction: "descending" }],
     });
 
     return response.results.map(parseTransaction);

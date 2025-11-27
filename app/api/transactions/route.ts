@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, type, payDate, note } = body;
+    const { amount, type, note } = body;
 
     if (!amount || !type) {
       return NextResponse.json({ error: "Missing required fields: amount, type" }, { status: 400 });
@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
     const transaction = await createTransaction({
       amount,
       type,
-      payDate,
       note,
     });
 

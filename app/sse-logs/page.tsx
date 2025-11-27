@@ -2,50 +2,103 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { clientSSELogger } from "@/lib/sse-logger";
 
 interface LogEntry {
   id: string;
   timestamp: Date;
-  level: "info" | "warn" | "error" | "success" | "debug";
+  level: "info" | "warn" | "error" | "success" | "debug" | "connection";
+  source: "client" | "server";
   message: string;
   data?: unknown;
+  metadata?: {
+    connectionId?: string;
+    eventId?: string;
+    retryCount?: number;
+    latency?: number;
+    endpoint?: string;
+    userAgent?: string;
+    ip?: string;
+  };
 }
 
 const SSE_ENDPOINT = "https://histweety-notification.vercel.app/sse";
+const LOCAL_SSE_ENDPOINT = "/api/sse";
 
 export default function SSELogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected" | "error">("disconnected");
   const [autoScroll, setAutoScroll] = useState(true);
+  const [selectedEndpoint, setSelectedEndpoint] = useState<'external' | 'local'>('external');
+  const [stats, setStats] = useState<any>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const connectionMetricsRef = useRef<any>(null);
 
-  const addLog = useCallback((level: LogEntry["level"], message: string, data?: unknown) => {
+  const addLog = useCallback((level: LogEntry["level"], message: string, data?: unknown, metadata?: LogEntry["metadata"]) => {
     const newLog: LogEntry = {
       id: `${Date.now()}-${Math.random()}`,
       timestamp: new Date(),
       level,
+      source: 'client',
       message,
       data,
+      metadata,
     };
     setLogs((prev) => [...prev, newLog]);
+
+    // Also add to the logger
+    clientSSELogger.addLog(level, message, data, metadata);
   }, []);
 
   useEffect(() => {
+    // Load stats on mount
+    const loadStats = async () => {
+      try {
+        const response = await fetch('/api/logs?limit=1');
+        const data = await response.json();
+        setStats(data.stats);
+      } catch (error) {
+        addLog('error', 'Failed to load stats', error);
+      }
+    };
+
+    loadStats();
+    loadStats(); // Refresh stats every 30 seconds
+    const statsInterval = setInterval(loadStats, 30000);
+
+    return () => clearInterval(statsInterval);
+  }, [addLog]);
+
+  useEffect(() => {
     // Connect to SSE endpoint
-    const connectSSE = () => {
+    const connectSSE = (retryCount: number = 0) => {
+      const endpoint = selectedEndpoint === 'external' ? SSE_ENDPOINT : LOCAL_SSE_ENDPOINT;
+
       setConnectionStatus("connecting");
+      addLog("connection", "Connecting to SSE endpoint", { endpoint }, {
+        retryCount,
+        endpoint,
+      });
 
       try {
-        const eventSource = new EventSource(SSE_ENDPOINT);
+        const eventSource = new EventSource(endpoint);
         eventSourceRef.current = eventSource;
 
+        const startTime = Date.now();
+
         eventSource.onopen = () => {
+          const latency = Date.now() - startTime;
           setConnectionStatus("connected");
-          addLog("info", "Connected to SSE endpoint");
+          addLog("success", `Connected to SSE endpoint`, { endpoint, latency }, {
+            endpoint,
+            latency,
+          });
         };
 
         eventSource.onmessage = (event) => {
+          const latency = Date.now() - startTime;
+
           try {
             const data = JSON.parse(event.data) as Record<string, unknown>;
 
@@ -66,23 +119,34 @@ export default function SSELogsPage() {
               data.message || data.msg || data.text || JSON.stringify(data)
             );
 
-            addLog(level, message, data);
+            addLog(level, message, data, {
+              endpoint,
+              latency,
+              eventId: data.id?.toString(),
+            });
+
           } catch {
             // If not JSON, treat as plain text
-            addLog("info", String(event.data));
+            addLog("info", String(event.data), undefined, {
+              endpoint,
+              latency,
+            });
           }
         };
 
         eventSource.onerror = (error) => {
           console.error("SSE Error:", error);
           setConnectionStatus("error");
-          addLog("error", "SSE connection error occurred");
+          addLog("error", "SSE connection error occurred", error, {
+            endpoint,
+            retryCount,
+          });
 
           // Attempt to reconnect after 5 seconds
           setTimeout(() => {
             if (eventSourceRef.current?.readyState === EventSource.CLOSED) {
               addLog("info", "Attempting to reconnect...");
-              connectSSE();
+              connectSSE(retryCount + 1);
             }
           }, 5000);
         };
@@ -92,15 +156,32 @@ export default function SSELogsPage() {
           try {
             const data = JSON.parse(event.data) as Record<string, unknown>;
             const msg = String(data.message || JSON.stringify(data));
-            addLog("success", `Notification: ${msg}`, data);
+            addLog("success", `Notification: ${msg}`, data, {
+              endpoint,
+              eventId: 'notification',
+            });
           } catch {
-            addLog("success", `Notification: ${String(event.data)}`);
+            addLog("success", `Notification: ${String(event.data)}`, undefined, {
+              endpoint,
+              eventId: 'notification',
+            });
           }
+        });
+
+        // Listen for heartbeat events
+        eventSource.addEventListener("heartbeat", (event: MessageEvent) => {
+          addLog("debug", "Heartbeat received", undefined, {
+            endpoint,
+            eventId: 'heartbeat',
+          });
         });
 
       } catch (error) {
         setConnectionStatus("error");
-        addLog("error", `Failed to connect: ${error}`);
+        addLog("error", `Failed to connect: ${error}`, error, {
+          endpoint,
+          retryCount,
+        });
       }
     };
 
@@ -131,19 +212,56 @@ export default function SSELogsPage() {
       eventSourceRef.current.close();
     }
 
-    setConnectionStatus("connecting");
-    const eventSource = new EventSource(SSE_ENDPOINT);
-    eventSourceRef.current = eventSource;
+    connectSSE();
+  };
 
-    eventSource.onopen = () => {
-      setConnectionStatus("connected");
-      addLog("info", "Reconnected to SSE endpoint");
-    };
+  const switchEndpoint = (endpoint: 'external' | 'local') => {
+    setSelectedEndpoint(endpoint);
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+    connectSSE();
+  };
 
-    eventSource.onerror = () => {
-      setConnectionStatus("error");
-      addLog("error", "Connection error");
-    };
+  const exportLogs = async (format: 'json' | 'csv' = 'json') => {
+    try {
+      const response = await fetch(`/api/logs?format=${format}`);
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sse-logs-${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      addLog('success', `Logs exported as ${format.toUpperCase()}`, { format });
+    } catch (error) {
+      addLog('error', 'Failed to export logs', error);
+    }
+  };
+
+  const clearLocalLogs = () => {
+    setLogs([]);
+    addLog('info', 'Local logs cleared', { action: 'clear_local' });
+  };
+
+  const clearAllLogs = async () => {
+    try {
+      const response = await fetch('/api/logs?confirm=true', { method: 'DELETE' });
+      const result = await response.json();
+
+      if (result.success) {
+        setLogs([]);
+        addLog('success', 'All logs cleared', result);
+      } else {
+        addLog('error', 'Failed to clear logs', result);
+      }
+    } catch (error) {
+      addLog('error', 'Failed to clear logs', error);
+    }
   };
 
   const getStatusColor = () => {
@@ -197,6 +315,8 @@ export default function SSELogsPage() {
         return "✅";
       case "debug":
         return "🔍";
+      case "connection":
+        return "🔌";
       default:
         return "ℹ️";
     }
@@ -226,6 +346,19 @@ export default function SSELogsPage() {
               <div className={`h-2.5 w-2.5 rounded-full ${getStatusColor()}`} />
               <span className="text-sm text-primary-muted">{getStatusText()}</span>
             </div>
+
+            {/* Endpoint Selector */}
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5">
+              <span className="text-sm text-primary-muted">Endpoint:</span>
+              <select
+                value={selectedEndpoint}
+                onChange={(e) => switchEndpoint(e.target.value as 'external' | 'local')}
+                className="bg-transparent text-sm text-primary-muted focus:outline-none"
+              >
+                <option value="external">External</option>
+                <option value="local">Local</option>
+              </select>
+            </div>
           </div>
 
           <Link
@@ -241,16 +374,53 @@ export default function SSELogsPage() {
 
         {/* Controls */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <button
-            onClick={clearLogs}
-            className="flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-primary-muted transition-colors hover:bg-surface-hover hover:text-primary"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Clear Logs
-          </button>
+          {/* Log Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={clearLocalLogs}
+              className="flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm text-primary-muted transition-colors hover:bg-surface-hover hover:text-primary"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Clear Local
+            </button>
 
+            <button
+              onClick={clearAllLogs}
+              className="flex items-center gap-2 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Clear All
+            </button>
+          </div>
+
+          {/* Export Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => exportLogs('json')}
+              className="flex items-center gap-2 rounded-lg border border-blue-500/50 bg-blue-500/10 px-4 py-2 text-sm text-blue-400 transition-colors hover:bg-blue-500/20 hover:text-blue-300"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export JSON
+            </button>
+
+            <button
+              onClick={() => exportLogs('csv')}
+              className="flex items-center gap-2 rounded-lg border border-green-500/50 bg-green-500/10 px-4 py-2 text-sm text-green-400 transition-colors hover:bg-green-500/20 hover:text-green-300"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export CSV
+            </button>
+          </div>
+
+          {/* View Controls */}
           <button
             onClick={() => setAutoScroll(!autoScroll)}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors ${
@@ -276,8 +446,21 @@ export default function SSELogsPage() {
             Reconnect
           </button>
 
-          <div className="ml-auto text-sm text-primary-subtle">
-            Total logs: <span className="font-semibold text-primary-muted">{logs.length}</span>
+          {/* Stats Display */}
+          <div className="ml-auto flex items-center gap-4 text-sm text-primary-subtle">
+            <div>
+              Local logs: <span className="font-semibold text-primary-muted">{logs.length}</span>
+            </div>
+            {stats && (
+              <>
+                <div>
+                  Total logs: <span className="font-semibold text-primary-muted">{stats.totalLogs || 0}</span>
+                </div>
+                <div>
+                  Connections: <span className="font-semibold text-primary-muted">{stats.connections || 0}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -288,7 +471,12 @@ export default function SSELogsPage() {
             <div className="mb-4 rounded-lg border border-border-hover bg-surface-hover p-3">
               <div className="flex items-center gap-2 text-xs text-primary-subtle">
                 <span className="font-semibold text-primary-muted">Endpoint:</span>
-                <code className="rounded bg-background px-2 py-1 font-mono text-cyan-400">{SSE_ENDPOINT}</code>
+                <code className="rounded bg-background px-2 py-1 font-mono text-cyan-400">
+                  {selectedEndpoint === 'external' ? SSE_ENDPOINT : LOCAL_SSE_ENDPOINT}
+                </code>
+                <span className="text-xs text-primary-subtle/60">
+                  ({selectedEndpoint})
+                </span>
               </div>
             </div>
 
@@ -327,11 +515,40 @@ export default function SSELogsPage() {
                               <span className="rounded bg-background/50 px-2 py-0.5 font-mono font-semibold uppercase tracking-wider">
                                 {log.level}
                               </span>
+                              <span className="rounded bg-background/30 px-2 py-0.5 font-mono text-xs">
+                                [{log.source}]
+                              </span>
                             </div>
 
                             <div className="line-clamp-2 text-sm font-medium leading-relaxed">
                               {log.message}
                             </div>
+
+                            {/* Additional metadata */}
+                            {log.metadata && (
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {log.metadata.endpoint && (
+                                  <span className="text-xs text-primary-subtle/70 bg-background/30 px-2 py-0.5 rounded">
+                                    🌐 {log.metadata.endpoint}
+                                  </span>
+                                )}
+                                {log.metadata.latency && (
+                                  <span className="text-xs text-primary-subtle/70 bg-background/30 px-2 py-0.5 rounded">
+                                    ⏱️ {log.metadata.latency}ms
+                                  </span>
+                                )}
+                                {log.metadata.eventId && (
+                                  <span className="text-xs text-primary-subtle/70 bg-background/30 px-2 py-0.5 rounded">
+                                    🔗 {log.metadata.eventId}
+                                  </span>
+                                )}
+                                {log.metadata.retryCount && log.metadata.retryCount > 0 && (
+                                  <span className="text-xs text-primary-subtle/70 bg-background/30 px-2 py-0.5 rounded">
+                                    🔄 Retry #{log.metadata.retryCount}
+                                  </span>
+                                )}
+                              </div>
+                            )}
 
                             {logDataString && (
                               <details className="mt-2">
