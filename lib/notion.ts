@@ -1,13 +1,18 @@
 import { Client } from "@notionhq/client";
+import { DATABASE_IDS } from "./database-ids";
 
 const notion = new Client({
   auth: process.env.NOTION_API_KEY,
 });
 
-const ACTIVITIES_DATABASE_ID = process.env.NOTION_ACTIVITIES_DATABASE_ID || "";
-const TRANSACTIONS_ACTIVITIES_DATABASE_ID = process.env.NOTION_TRANSACTIONS_DATABASE_ID || "";
-
 export interface Activity {
+  id: string;
+  name: string;
+  duration: number;
+  createdTime: string;
+}
+
+export interface Emotion {
   id: string;
   name: string;
   duration: number;
@@ -80,7 +85,7 @@ const parseActivity = (page: NotionPage): Activity => {
 export async function createDefaultActivity(activityName: string = "Chill"): Promise<Activity> {
   try {
     const newPage = await notion.pages.create({
-      parent: { database_id: ACTIVITIES_DATABASE_ID },
+      parent: { database_id: DATABASE_IDS.ACTIVITIES },
       properties: {
         Kind: { select: { name: activityName } },
         "Duration in hours": { number: 0 },
@@ -98,7 +103,7 @@ export async function getCurrentActivity(): Promise<Activity> {
   try {
     // Ultra-simple: just get the most recently edited activity
     const response = await notion.databases.query({
-      database_id: ACTIVITIES_DATABASE_ID,
+      database_id: DATABASE_IDS.ACTIVITIES,
       sorts: [{ property: "Last edited time", direction: "descending" }],
       page_size: 1,
     });
@@ -129,7 +134,7 @@ export async function getCurrentActivity(): Promise<Activity> {
 export async function getActivities(): Promise<string[]> {
   try {
     const database = await notion.databases.retrieve({
-      database_id: ACTIVITIES_DATABASE_ID,
+      database_id: DATABASE_IDS.ACTIVITIES,
     });
 
     const kindProperty = database.properties.Kind as any;
@@ -167,7 +172,7 @@ export async function updateActivity(data: {
 
     // Create new current activity with 0 duration
     const newPage = await notion.pages.create({
-      parent: { database_id: ACTIVITIES_DATABASE_ID },
+      parent: { database_id: DATABASE_IDS.ACTIVITIES },
       properties: {
         Kind: { select: { name: newActivityName } },
         "Duration in hours": { number: 0 },
@@ -180,6 +185,144 @@ export async function updateActivity(data: {
     throw new Error("Failed to update activity");
   }
 }
+
+// ===== EMOTION FUNCTIONS =====
+
+const parseEmotion = (page: NotionPage): Emotion => {
+  const emotionName = page.properties.Kind?.select?.name;
+  const duration = page.properties["Duration in hours"]?.number;
+
+  // Prevent undefined data - validate and provide fallbacks
+  if (!emotionName || typeof emotionName !== 'string') {
+    throw new Error(`Invalid emotion name: ${emotionName}. Emotion must have a valid name.`);
+  }
+
+  // Strict duration validation - ensure we get the exact value
+  let parsedDuration: number;
+  if (typeof duration === 'number') {
+    // Handle potential floating point precision issues
+    parsedDuration = Math.round(duration * 100000000) / 100000000; // Round to 8 decimal places
+  } else if (duration === null || duration === undefined) {
+    parsedDuration = 0;
+  } else {
+    // This shouldn't happen with Notion API, but just in case
+    console.warn(`Unexpected duration type: ${typeof duration} (${duration}), defaulting to 0`);
+    parsedDuration = 0;
+  }
+
+  return {
+    id: page.id,
+    name: emotionName.trim(),
+    duration: parsedDuration,
+    createdTime: page.created_time,
+  };
+};
+
+export async function createDefaultEmotion(emotionName: string = "Neutral"): Promise<Emotion> {
+  try {
+    const newPage = await notion.pages.create({
+      parent: { database_id: DATABASE_IDS.EMOTIONS },
+      properties: {
+        Kind: { select: { name: emotionName } },
+        "Duration in hours": { number: 0 },
+      },
+    });
+
+    return parseEmotion(newPage as NotionPage);
+  } catch (error) {
+    console.error("Error creating default emotion:", error);
+    throw new Error("Failed to create default emotion");
+  }
+}
+
+export async function getCurrentEmotion(): Promise<Emotion> {
+  try {
+    // Ultra-simple: just get the most recently edited emotion
+    const response = await notion.databases.query({
+      database_id: DATABASE_IDS.EMOTIONS,
+      sorts: [{ property: "Last edited time", direction: "descending" }],
+      page_size: 1,
+    });
+
+    if (response.results.length > 0) {
+      const emotion = parseEmotion(response.results[0] as NotionPage);
+      console.log(`Found current emotion: ${emotion.name} (most recently edited)`);
+      return emotion;
+    }
+
+    // No emotions exist at all, create the first one
+    console.log("No emotions found, creating first emotion");
+    return await createDefaultEmotion();
+  } catch (error) {
+    console.error("Error fetching current emotion:", error);
+
+    // As fallback, try to create a default emotion
+    try {
+      console.log("Attempting to create fallback emotion due to error");
+      return await createDefaultEmotion();
+    } catch (fallbackError) {
+      console.error("Failed to create fallback emotion:", fallbackError);
+      throw new Error("Failed to fetch or create current emotion");
+    }
+  }
+}
+
+export async function getEmotions(): Promise<string[]> {
+  try {
+    const database = await notion.databases.retrieve({
+      database_id: DATABASE_IDS.EMOTIONS,
+    });
+
+    const kindProperty = database.properties.Kind as any;
+    const emotions = kindProperty?.select?.options?.map((opt: any) => opt.name) || [];
+
+    return emotions.sort();
+  } catch (error) {
+    console.error("Error fetching emotions:", error);
+    throw new Error("Failed to fetch emotions");
+  }
+}
+
+export async function updateEmotion(data: {
+  currentEmotionId?: string;
+  newEmotionName: string;
+}): Promise<Emotion> {
+  try {
+    const { currentEmotionId, newEmotionName } = data;
+    const now = new Date().toISOString();
+
+    // Calculate duration for current emotion and update it
+    if (currentEmotionId) {
+      const currentEmotion = await notion.pages.retrieve({ page_id: currentEmotionId }) as any;
+      const createdTime = new Date(currentEmotion.created_time).getTime();
+      const currentTime = new Date(now).getTime();
+      const durationInHours = (currentTime - createdTime) / (1000 * 60 * 60);
+
+      await notion.pages.update({
+        page_id: currentEmotionId,
+        properties: {
+          "Duration in hours": { number: durationInHours },
+        },
+      });
+    }
+
+    // Create new current emotion with 0 duration
+    const newPage = await notion.pages.create({
+      parent: { database_id: DATABASE_IDS.EMOTIONS },
+      properties: {
+        Kind: { select: { name: newEmotionName } },
+        "Duration in hours": { number: 0 },
+      },
+    });
+
+    return parseEmotion(newPage as NotionPage);
+  } catch (error) {
+    console.error("Error updating emotion:", error);
+    throw new Error("Failed to update emotion");
+  }
+}
+
+// ===== TRANSACTION FUNCTIONS =====
 
 export function getTransactionCategories(): string[] {
   return ["Makan", "Gift", "Bill", "HealthCare", "Shopping", "Subscription", "Transportation"];
@@ -212,7 +355,7 @@ export async function createTransaction(data: {
     }
 
     const newPage = await notion.pages.create({
-      parent: { database_id: TRANSACTIONS_ACTIVITIES_DATABASE_ID },
+      parent: { database_id: DATABASE_IDS.TRANSACTIONS },
       properties: pageProperties,
     });
 
@@ -238,7 +381,7 @@ export async function getTransactionsByMonth(year: number, month: number): Promi
     const endDate = new Date(year, month, 0).toISOString().split("T")[0];
 
     const response = await notion.databases.query({
-      database_id: TRANSACTIONS_ACTIVITIES_DATABASE_ID,
+      database_id: DATABASE_IDS.TRANSACTIONS,
       filter: {
         and: [
           {

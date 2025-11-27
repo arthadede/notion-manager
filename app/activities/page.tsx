@@ -10,11 +10,22 @@ interface Activity {
   createdTime: string;
 }
 
+interface Emotion {
+  id: string;
+  name: string;
+  duration: number;
+  createdTime: string;
+}
+
 export default function ActivityTracker() {
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null);
   const [activities, setActivities] = useState<string[]>([]);
   const [selectedActivity, setSelectedActivity] = useState("");
-    const [loading, setLoading] = useState(false);
+  const [currentEmotion, setCurrentEmotion] = useState<Emotion | null>(null);
+  const [emotions, setEmotions] = useState<string[]>([]);
+  const [selectedEmotion, setSelectedEmotion] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [emotionLoading, setEmotionLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -52,10 +63,17 @@ export default function ActivityTracker() {
 
     const loadInitialData = async () => {
       try {
-        const [currentResponse, activitiesResponse] = await Promise.all([fetch("/api/current"), fetch("/api")]);
+        const [currentResponse, activitiesResponse, currentEmotionResponse, emotionsResponse] = await Promise.all([
+          fetch("/api/current"),
+          fetch("/api"),
+          fetch("/api/emotions/current"),
+          fetch("/api/emotions")
+        ]);
 
         const currentData = await currentResponse.json();
         const activitiesData = await activitiesResponse.json();
+        const currentEmotionData = await currentEmotionResponse.json();
+        const emotionsData = await emotionsResponse.json();
 
         if (mounted) {
           // getCurrentActivity() now always returns an activity
@@ -67,7 +85,15 @@ export default function ActivityTracker() {
             console.warn("No activity returned from API");
           }
 
+          if (currentEmotionData.emotion) {
+            setCurrentEmotion(currentEmotionData.emotion);
+            setSelectedEmotion(currentEmotionData.emotion.name);
+          } else {
+            console.warn("No emotion returned from API");
+          }
+
           setActivities(activitiesData.activities || []);
+          setEmotions(emotionsData.emotions || []);
           setInitialLoading(false);
         }
       } catch {
@@ -98,6 +124,22 @@ export default function ActivityTracker() {
     } catch (error) {
       // Silently fail to avoid showing error message during update
       console.warn("Failed to fetch current activity:", error);
+    }
+  };
+
+  const fetchCurrentEmotion = async () => {
+    try {
+      const response = await fetch("/api/emotions/current");
+      const data = await response.json();
+      if (data.emotion) {
+        setCurrentEmotion(data.emotion);
+        setSelectedEmotion(data.emotion.name);
+      } else {
+        console.warn("No emotion returned from current API");
+      }
+    } catch (error) {
+      // Silently fail to avoid showing error message during update
+      console.warn("Failed to fetch current emotion:", error);
     }
   };
 
@@ -182,6 +224,42 @@ export default function ActivityTracker() {
     }
   };
 
+  const handleEmotionQuickSwitch = async (emotionName: string) => {
+    // Don't do anything if clicking the current emotion
+    if (currentEmotion && currentEmotion.name === emotionName) {
+      return;
+    }
+
+    setEmotionLoading(true);
+    setMessage("");
+    setSelectedEmotion(emotionName);
+
+    try {
+      const response = await fetch("/api/emotions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentEmotionId: currentEmotion?.id,
+          newEmotionName: emotionName,
+        }),
+      });
+
+      if (response.ok) {
+        setMessage("Emotion updated successfully!");
+        await fetchCurrentEmotion();
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("Failed to update emotion");
+      }
+    } catch {
+      setMessage("Error updating emotion");
+    } finally {
+      setEmotionLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8 lg:py-16">
@@ -256,6 +334,64 @@ export default function ActivityTracker() {
                   Duration: {calculateDuration(currentActivity.createdTime)}
                 </p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Current Emotion Badge */}
+        {currentEmotion && (
+          <div className="mb-6 animate-fade-in">
+            <div className="flex items-center gap-3 rounded-lg border border-accent-purple/20 bg-accent-purple/5 p-4">
+              <div className="relative flex h-3 w-3 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-purple opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-accent-purple"></span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-primary-subtle">Current Emotion</p>
+                <p className="font-medium text-primary">
+                  {formatTime(currentEmotion.createdTime)} {currentEmotion.name}
+                </p>
+                <p className="text-xs text-primary-subtle mt-1">
+                  Duration: {calculateDuration(currentEmotion.createdTime)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Emotion Switches */}
+        {!initialLoading && emotions.length > 0 && (
+          <div className="mb-6 animate-fade-in">
+            <h2 className="mb-3 text-sm font-medium text-primary">Quick Emotions</h2>
+            <div className="flex flex-wrap gap-2">
+              {emotions.map((emotion) => {
+                const isActive = currentEmotion?.name === emotion;
+                return (
+                  <button
+                    key={emotion}
+                    onClick={() => handleEmotionQuickSwitch(emotion)}
+                    disabled={emotionLoading || isActive}
+                    className={`group relative overflow-hidden rounded-lg border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? "border-accent-purple/40 bg-accent-purple/10 text-accent-purple cursor-default"
+                        : "border-border bg-surface text-primary-muted hover:border-border-hover hover:bg-surface-hover hover:text-primary active:scale-95"
+                    } ${emotionLoading && !isActive ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {isActive && (
+                      <span className="absolute inset-0 bg-gradient-to-r from-accent-purple/5 to-transparent animate-pulse"></span>
+                    )}
+                    <span className="relative flex items-center gap-2">
+                      {isActive && (
+                        <span className="flex h-2 w-2">
+                          <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-accent-purple opacity-75"></span>
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-purple"></span>
+                        </span>
+                      )}
+                      {emotion}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
