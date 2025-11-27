@@ -47,33 +47,82 @@ interface NotionRichTextProperty {
   rich_text: Array<{ type: 'text'; text: { content: string } }> | [];
 }
 
-const parseActivity = (page: NotionPage): Activity => ({
-  id: page.id,
-  name: page.properties.Kind?.select?.name || "",
-  duration: page.properties["Duration in hours"]?.number || 0,
-  createdTime: page.created_time,
-});
+const parseActivity = (page: NotionPage): Activity => {
+  const activityName = page.properties.Kind?.select?.name;
+  const duration = page.properties["Duration in hours"]?.number;
 
-export async function getCurrentActivity(): Promise<Activity | null> {
+  // Prevent undefined data - validate and provide fallbacks
+  if (!activityName || typeof activityName !== 'string') {
+    throw new Error(`Invalid activity name: ${activityName}. Activity must have a valid name.`);
+  }
+
+  // Strict duration validation - ensure we get the exact value
+  let parsedDuration: number;
+  if (typeof duration === 'number') {
+    // Handle potential floating point precision issues
+    parsedDuration = Math.round(duration * 100000000) / 100000000; // Round to 8 decimal places
+  } else if (duration === null || duration === undefined) {
+    parsedDuration = 0;
+  } else {
+    // This shouldn't happen with Notion API, but just in case
+    console.warn(`Unexpected duration type: ${typeof duration} (${duration}), defaulting to 0`);
+    parsedDuration = 0;
+  }
+
+  return {
+    id: page.id,
+    name: activityName.trim(),
+    duration: parsedDuration,
+    createdTime: page.created_time,
+  };
+};
+
+export async function createDefaultActivity(activityName: string = "Chill"): Promise<Activity> {
   try {
+    const newPage = await notion.pages.create({
+      parent: { database_id: ACTIVITIES_DATABASE_ID },
+      properties: {
+        Kind: { select: { name: activityName } },
+        "Duration in hours": { number: 0 },
+      },
+    });
+
+    return parseActivity(newPage as NotionPage);
+  } catch (error) {
+    console.error("Error creating default activity:", error);
+    throw new Error("Failed to create default activity");
+  }
+}
+
+export async function getCurrentActivity(): Promise<Activity> {
+  try {
+    // Ultra-simple: just get the most recently edited activity
     const response = await notion.databases.query({
       database_id: ACTIVITIES_DATABASE_ID,
-      filter: {
-        property: "Duration in hours",
-        number: { equals: 0 },
-      },
-      sorts: [{ property: "Created time", direction: "descending" }],
+      sorts: [{ property: "Last edited time", direction: "descending" }],
       page_size: 1,
     });
 
-    if (response.results.length === 0) {
-      return null;
+    if (response.results.length > 0) {
+      const activity = parseActivity(response.results[0] as NotionPage);
+      console.log(`Found current activity: ${activity.name} (most recently edited)`);
+      return activity;
     }
 
-    return parseActivity(response.results[0] as NotionPage);
+    // No activities exist at all, create the first one
+    console.log("No activities found, creating first activity");
+    return await createDefaultActivity();
   } catch (error) {
     console.error("Error fetching current activity:", error);
-    throw new Error("Failed to fetch current activity");
+
+    // As fallback, try to create a default activity
+    try {
+      console.log("Attempting to create fallback activity due to error");
+      return await createDefaultActivity();
+    } catch (fallbackError) {
+      console.error("Failed to create fallback activity:", fallbackError);
+      throw new Error("Failed to fetch or create current activity");
+    }
   }
 }
 
@@ -120,9 +169,6 @@ export async function updateActivity(data: {
     const newPage = await notion.pages.create({
       parent: { database_id: ACTIVITIES_DATABASE_ID },
       properties: {
-        Name: {
-          title: [{ text: { content: newActivityName } }],
-        },
         Kind: { select: { name: newActivityName } },
         "Duration in hours": { number: 0 },
       },

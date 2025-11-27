@@ -58,9 +58,13 @@ export default function ActivityTracker() {
         const activitiesData = await activitiesResponse.json();
 
         if (mounted) {
+          // getCurrentActivity() now always returns an activity
           if (currentData.activity) {
             setCurrentActivity(currentData.activity);
             setSelectedActivity(currentData.activity.name);
+          } else {
+            // Fallback handling in case API structure changes
+            console.warn("No activity returned from API");
           }
 
           setActivities(activitiesData.activities || []);
@@ -88,9 +92,12 @@ export default function ActivityTracker() {
       if (data.activity) {
         setCurrentActivity(data.activity);
         setSelectedActivity(data.activity.name);
+      } else {
+        console.warn("No activity returned from current API");
       }
-    } catch {
+    } catch (error) {
       // Silently fail to avoid showing error message during update
+      console.warn("Failed to fetch current activity:", error);
     }
   };
 

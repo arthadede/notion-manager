@@ -22,34 +22,16 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        // Load activities from API
-        const response = await fetch('/api/activities?limit=1');
-        const data = await response.json();
-
-        if (data.activities) {
-          const totalActivities = data.activities.length;
-          const todayActivities = data.activities.filter((activity: { created_time?: string; properties?: { Start?: { date?: { start?: string } } } }) => {
-            const activityDate = new Date(activity.properties?.Start?.date?.start || activity.created_time || Date.now());
-            const today = new Date();
-            return activityDate.toDateString() === today.toDateString();
-          }).length;
-
-          setStats(prev => ({
-            ...prev,
-            totalActivities,
-            todayActivities,
-          }));
-        }
-
         // Load current activity
         const currentResponse = await fetch('/api/current');
         const currentData = await currentResponse.json();
 
         if (currentData.activity) {
+          const activity = currentData.activity;
           setStats(prev => ({
             ...prev,
-            currentActivity: currentData.activity.properties.Name.title[0]?.plain_text || 'Unknown Activity',
-            startTime: currentData.activity.properties.Start?.date?.start ? new Date(currentData.activity.properties.Start.date.start) : null,
+            currentActivity: activity.name || 'Unknown Activity',
+            startTime: activity.createdTime ? new Date(activity.createdTime) : null,
           }));
         }
 
