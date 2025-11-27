@@ -6,17 +6,15 @@ import Link from "next/link";
 interface Activity {
   id: string;
   name: string;
-  notes: string;
-  startTime: string;
-  endTime: string | null;
+  duration: number;
+  createdTime: string;
 }
 
 export default function ActivityTracker() {
   const [currentActivity, setCurrentActivity] = useState<Activity | null>(null);
   const [activities, setActivities] = useState<string[]>([]);
   const [selectedActivity, setSelectedActivity] = useState("");
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -29,6 +27,24 @@ export default function ActivityTracker() {
     const formattedHours = hours % 12 || 12;
     const formattedMinutes = minutes.toString().padStart(2, "0");
     return `${formattedHours}:${formattedMinutes}${ampm}`;
+  };
+
+  // Calculate duration from created time
+  const calculateDuration = (createdTime: string) => {
+    const created = new Date(createdTime).getTime();
+    const now = new Date().getTime();
+    const diffMs = now - created;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const remainingMinutes = diffMinutes % 60;
+
+    if (diffHours === 0) {
+      return `${remainingMinutes}m`;
+    } else if (remainingMinutes === 0) {
+      return `${diffHours}h`;
+    } else {
+      return `${diffHours}h ${remainingMinutes}m`;
+    }
   };
 
   useEffect(() => {
@@ -106,13 +122,11 @@ export default function ActivityTracker() {
         body: JSON.stringify({
           currentActivityId: currentActivity?.id,
           newActivityName: selectedActivity,
-          notes,
         }),
       });
 
       if (response.ok) {
         setMessage("Activity updated successfully!");
-        setNotes("");
         await fetchCurrentActivity();
         setTimeout(() => setMessage(""), 3000);
       } else {
@@ -144,7 +158,6 @@ export default function ActivityTracker() {
         body: JSON.stringify({
           currentActivityId: currentActivity?.id,
           newActivityName: activityName,
-          notes: "",
         }),
       });
 
@@ -230,107 +243,45 @@ export default function ActivityTracker() {
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-primary-subtle">Currently Active</p>
                 <p className="font-medium text-primary">
-                  {formatTime(currentActivity.startTime)} {currentActivity.name}
-                  {currentActivity.notes && ` - ${currentActivity.notes}`}
+                  {formatTime(currentActivity.createdTime)} {currentActivity.name}
+                </p>
+                <p className="text-xs text-primary-subtle mt-1">
+                  Duration: {calculateDuration(currentActivity.createdTime)}
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Main Content */}
-        {initialLoading ? (
-          <LoadingSkeleton />
-        ) : (
-          <div className="card animate-slide-up">
-            <div className="space-y-6">
-              {/* Activity Select */}
-              <div>
-                <label htmlFor="activity" className="mb-2 block text-sm font-medium text-primary">
-                  Select Activity
-                </label>
-                <select
-                  id="activity"
-                  value={selectedActivity}
-                  onChange={(e) => setSelectedActivity(e.target.value)}
-                  className="select"
-                  disabled={loading}
-                >
-                  <option value="">Choose an activity...</option>
-                  {activities.map((activity) => (
-                    <option key={activity} value={activity}>
-                      {activity}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Notes Input */}
-              <div>
-                <label htmlFor="notes" className="mb-2 block text-sm font-medium text-primary">
-                  Notes{" "}
-                  <span className="font-normal text-primary-subtle">(optional)</span>
-                </label>
-                <input
-                  id="notes"
-                  type="text"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add any additional notes..."
-                  className="input"
-                  disabled={loading}
-                />
-              </div>
-
-              {/* Submit Button */}
-              <button onClick={handleUpdate} disabled={loading || !selectedActivity} className="btn-primary">
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Updating...
-                  </span>
+        {/* Status Message */}
+        {message && (
+          <div className="fixed top-4 right-4 z-50">
+            <div
+              className={`animate-fade-in ${
+                message.includes("success") ? "alert-success" : "alert-error"
+              }`}
+              role="alert"
+            >
+              <div className="flex items-center gap-2">
+                {message.includes("success") ? (
+                  <svg className="h-5 w-5 text-accent-green" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 ) : (
-                  "Update Activity"
+                  <svg className="h-5 w-5 text-accent-red" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 )}
-              </button>
-
-              {/* Status Message */}
-              {message && (
-                <div
-                  className={`animate-fade-in ${
-                    message.includes("success") ? "alert-success" : "alert-error"
-                  }`}
-                  role="alert"
-                >
-                  <div className="flex items-center gap-2">
-                    {message.includes("success") ? (
-                      <svg className="h-5 w-5 text-accent-green" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    ) : (
-                      <svg className="h-5 w-5 text-accent-red" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                    <span>{message}</span>
-                  </div>
-                </div>
-              )}
+                <span>{message}</span>
+              </div>
             </div>
           </div>
         )}

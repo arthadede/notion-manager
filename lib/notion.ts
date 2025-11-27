@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Client } from "@notionhq/client";
 
 const notion = new Client({
@@ -11,9 +10,8 @@ const TRANSACTIONS_ACTIVITIES_DATABASE_ID = process.env.NOTION_TRANSACTIONS_DATA
 export interface Activity {
   id: string;
   name: string;
-  notes: string;
-  startTime: string;
-  endTime: string | null;
+  duration: number;
+  createdTime: string;
 }
 
 export interface Transaction {
@@ -25,12 +23,35 @@ export interface Transaction {
   notes: string;
 }
 
-const parseActivity = (page): Activity => ({
+interface NotionPage {
+  id: string;
+  properties: Record<string, any>;
+  created_time: string;
+  last_edited_time: string;
+}
+
+interface NotionSelectProperty {
+  type: 'select';
+  select: {
+    name: string;
+  } | null;
+}
+
+interface NotionNumberProperty {
+  type: 'number';
+  number: number | null;
+}
+
+interface NotionRichTextProperty {
+  type: 'rich_text';
+  rich_text: Array<{ type: 'text'; text: { content: string } }> | [];
+}
+
+const parseActivity = (page: NotionPage): Activity => ({
   id: page.id,
   name: page.properties.Kind?.select?.name || "",
-  notes: page.properties.Note?.rich_text?.[0]?.plain_text || "",
-  startTime: page.properties["Started Time"]?.date?.start || "",
-  endTime: page.properties["End Time"]?.date?.start || null,
+  duration: page.properties["Duration in hours"]?.number || 0,
+  createdTime: page.created_time,
 });
 
 export async function getCurrentActivity(): Promise<Activity | null> {
@@ -38,10 +59,10 @@ export async function getCurrentActivity(): Promise<Activity | null> {
     const response = await notion.databases.query({
       database_id: ACTIVITIES_DATABASE_ID,
       filter: {
-        property: "End Time",
-        date: { is_empty: true },
+        property: "Duration in hours",
+        number: { equals: 0 },
       },
-      sorts: [{ property: "Started Time", direction: "descending" }],
+      sorts: [{ property: "Created time", direction: "descending" }],
       page_size: 1,
     });
 
@@ -49,7 +70,7 @@ export async function getCurrentActivity(): Promise<Activity | null> {
       return null;
     }
 
-    return parseActivity(response.results[0]);
+    return parseActivity(response.results[0] as NotionPage);
   } catch (error) {
     console.error("Error fetching current activity:", error);
     throw new Error("Failed to fetch current activity");
@@ -62,8 +83,8 @@ export async function getActivities(): Promise<string[]> {
       database_id: ACTIVITIES_DATABASE_ID,
     });
 
-    const kindProperty = database.properties.Kind;
-    const activities = kindProperty?.select?.options?.map((opt) => opt.name) || [];
+    const kindProperty = database.properties.Kind as any;
+    const activities = kindProperty?.select?.options?.map((opt: any) => opt.name) || [];
 
     return activities.sort();
   } catch (error) {
@@ -75,34 +96,39 @@ export async function getActivities(): Promise<string[]> {
 export async function updateActivity(data: {
   currentActivityId?: string;
   newActivityName: string;
-  notes?: string;
 }): Promise<Activity> {
   try {
-    const { currentActivityId, newActivityName, notes } = data;
+    const { currentActivityId, newActivityName } = data;
     const now = new Date().toISOString();
 
+    // Calculate duration for current activity and update it
     if (currentActivityId) {
+      const currentActivity = await notion.pages.retrieve({ page_id: currentActivityId }) as any;
+      const createdTime = new Date(currentActivity.created_time).getTime();
+      const currentTime = new Date(now).getTime();
+      const durationInHours = (currentTime - createdTime) / (1000 * 60 * 60);
+
       await notion.pages.update({
         page_id: currentActivityId,
         properties: {
-          "End Time": { date: { start: now } },
+          "Duration in hours": { number: durationInHours },
         },
       });
     }
 
+    // Create new current activity with 0 duration
     const newPage = await notion.pages.create({
       parent: { database_id: ACTIVITIES_DATABASE_ID },
       properties: {
-        Name: { title: [] },
-        Kind: { select: { name: newActivityName } },
-        Note: {
-          rich_text: notes ? [{ text: { content: notes } }] : [],
+        Name: {
+          title: [{ text: { content: newActivityName } }],
         },
-        "Started Time": { date: { start: now } },
+        Kind: { select: { name: newActivityName } },
+        "Duration in hours": { number: 0 },
       },
     });
 
-    return parseActivity(newPage);
+    return parseActivity(newPage as NotionPage);
   } catch (error) {
     console.error("Error updating activity:", error);
     throw new Error("Failed to update activity");
@@ -144,20 +170,20 @@ export async function createTransaction(data: {
       properties: pageProperties,
     });
 
-    return parseTransaction(newPage);
+    return parseTransaction(newPage as any);
   } catch (error) {
     console.error("Error creating transaction:", error);
     throw new Error("Failed to create transaction");
   }
 }
 
-const parseTransaction = (page): Transaction => ({
+const parseTransaction = (page: NotionPage): Transaction => ({
   id: page.id,
   description: page.properties.Name?.title?.[0]?.plain_text || "",
   amount: page.properties.Amount?.number || 0,
   category: page.properties.Kind?.select?.name || "",
-  date: page.properties["Created time"]?.created_time || "",
-  notes: page.properties.Note?.rich_text?.[0]?.plain_text || "",
+  date: page.created_time || "",
+  notes: page.properties.Note?.rich_text?.[0]?.text?.content || "",
 });
 
 export async function getTransactionsByMonth(year: number, month: number): Promise<Transaction[]> {
@@ -182,7 +208,7 @@ export async function getTransactionsByMonth(year: number, month: number): Promi
       sorts: [{ property: "Created time", direction: "descending" }],
     });
 
-    return response.results.map(parseTransaction);
+    return response.results.map((page: any) => parseTransaction(page));
   } catch (error) {
     console.error("Error fetching transactions:", error);
     throw new Error("Failed to fetch transactions");
