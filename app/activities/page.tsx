@@ -24,6 +24,7 @@ export default function ActivityTracker() {
   const [currentEmotion, setCurrentEmotion] = useState<Emotion | null>(null);
   const [emotions, setEmotions] = useState<string[]>([]);
   const [selectedEmotion, setSelectedEmotion] = useState("");
+  const [emotionInput, setEmotionInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [emotionLoading, setEmotionLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -249,6 +250,7 @@ export default function ActivityTracker() {
       if (response.ok) {
         setMessage("Emotion updated successfully!");
         await fetchCurrentEmotion();
+        setEmotionInput("");
         setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage("Failed to update emotion");
@@ -258,6 +260,15 @@ export default function ActivityTracker() {
     } finally {
       setEmotionLoading(false);
     }
+  };
+
+  const handleEmotionInputSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emotionInput.trim()) {
+      setMessage("Please enter an emotion");
+      return;
+    }
+    await handleEmotionQuickSwitch(emotionInput.trim());
   };
 
   return (
@@ -356,6 +367,37 @@ export default function ActivityTracker() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Emotion Input with Autocomplete */}
+        {!initialLoading && (
+          <div className="mb-6 animate-fade-in">
+            <form onSubmit={handleEmotionInputSubmit} className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  list="emotion-options"
+                  value={emotionInput}
+                  onChange={(e) => setEmotionInput(e.target.value)}
+                  placeholder="Type or select an emotion..."
+                  disabled={emotionLoading}
+                  className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-primary placeholder-primary-subtle transition-all duration-200 hover:border-border-hover focus:border-accent-purple focus:outline-none focus:ring-2 focus:ring-accent-purple/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <datalist id="emotion-options">
+                  {emotions.map((emotion) => (
+                    <option key={emotion} value={emotion} />
+                  ))}
+                </datalist>
+              </div>
+              <button
+                type="submit"
+                disabled={emotionLoading || !emotionInput.trim()}
+                className="rounded-lg border border-accent-purple/40 bg-accent-purple/10 px-6 py-2.5 text-sm font-medium text-accent-purple transition-all duration-200 hover:bg-accent-purple/20 hover:border-accent-purple/60 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+              >
+                {emotionLoading ? "Updating..." : "Update"}
+              </button>
+            </form>
           </div>
         )}
 

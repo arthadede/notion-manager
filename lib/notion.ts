@@ -267,6 +267,10 @@ export async function getCurrentEmotion(): Promise<Emotion> {
   }
 }
 
+export function getEmotionOptions(): string[] {
+  return ["Neutral", "Focus", "Happy", "Excited", "Calm", "Anxious", "Tired", "Energized", "Sad", "Grateful"];
+}
+
 export async function getEmotions(): Promise<string[]> {
   try {
     const database = await notion.databases.retrieve({
@@ -276,10 +280,16 @@ export async function getEmotions(): Promise<string[]> {
     const kindProperty = database.properties.Kind as any;
     const emotions = kindProperty?.select?.options?.map((opt: any) => opt.name) || [];
 
+    // If no emotions in database, return default options
+    if (emotions.length === 0) {
+      return getEmotionOptions();
+    }
+
     return emotions.sort();
   } catch (error) {
     console.error("Error fetching emotions:", error);
-    throw new Error("Failed to fetch emotions");
+    // Return default options as fallback
+    return getEmotionOptions();
   }
 }
 
