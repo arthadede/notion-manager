@@ -230,7 +230,7 @@ export default function TransactionPage() {
               </div>
             ) : (
               <div className="rounded-lg bg-gradient-to-br from-accent-purple/10 to-accent-blue/10 p-6 border border-border">
-                <div className="flex items-start justify-between gap-6">
+                <div className="flex items-center justify-between gap-6">
                   <div className="flex items-center gap-3">
                     <div className="rounded-full bg-accent-red/20 p-3">
                       <svg className="h-6 w-6 text-accent-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
