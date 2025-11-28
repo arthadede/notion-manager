@@ -40,7 +40,14 @@ export default function HomePage() {
       icon: "🎨",
       gradient: "from-pink-500/10 to-rose-500/10",
     },
-      ];
+    {
+      title: "Markdown Editor",
+      description: "Write and preview markdown with customizable toolbar",
+      href: "/markdown-editor",
+      icon: "✍️",
+      gradient: "from-indigo-500/10 to-violet-500/10",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background">
