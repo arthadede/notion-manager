@@ -1,25 +1,25 @@
 /**
  * Markdown Editor Demo Page
- * Demonstrates the production-ready, customizable markdown editor
+ * Demonstrates the InputMarkdown component from @histweety/ui
+ * Powered by MDXEditor with WYSIWYG editing experience
  */
 
 "use client";
 
 import { useState } from "react";
-import { MarkdownEditor, defaultToolbarActions, minimalToolbarActions } from "@/components/markdown-editor";
-import { Button } from "@histweety/ui";
+import { Button, InputMarkdown } from "@histweety/ui";
 
-const defaultContent = `# Welcome to Markdown Editor
+const defaultContent = `# Welcome to InputMarkdown
 
-This is a **production-ready**, _open-source_ markdown editor with a fully customizable menu.
+This is a **WYSIWYG** markdown editor powered by _MDXEditor_ with a Typora-like experience.
 
 ## Features
 
-- **Easy to Customize**: Modify toolbar actions via simple configuration
-- **Production Ready**: Built with TypeScript and best practices
+- **WYSIWYG Editing**: What you see is what you get - no separate preview mode
 - **Rich Formatting**: Support for all standard markdown features
-- **Live Preview**: See your markdown rendered in real-time
-- **Keyboard Shortcuts**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+K (link), Ctrl+S (save)
+- **Built-in Toolbar**: Comprehensive toolbar with all editing tools
+- **Perfect Newlines**: Blank lines and newlines are preserved exactly as typed
+- **Keyboard Shortcuts**: Cmd/Ctrl+B (bold), Cmd/Ctrl+I (italic), and more
 
 ## Examples
 
@@ -77,9 +77,8 @@ Start editing this document or clear it and write your own content. Use the tool
 export default function MarkdownEditorPage() {
   const [content, setContent] = useState("");
   const [savedContent, setSavedContent] = useState<string | null>(null);
-  const [toolbarMode, setToolbarMode] = useState<"full" | "minimal">("full");
 
-  const handleSave = (content: string) => {
+  const handleSave = () => {
     setSavedContent(content);
     console.log("Content saved:", content);
     // Here you could save to localStorage, API, etc.
@@ -88,8 +87,8 @@ export default function MarkdownEditorPage() {
     }
   };
 
-  const handleChange = (content: string) => {
-    setContent(content);
+  const handleChange = (newContent: string) => {
+    setContent(newContent);
   };
 
   const loadExample = () => {
@@ -103,12 +102,12 @@ export default function MarkdownEditorPage() {
         <div className="mb-6">
           <h1 className="mb-2 text-4xl font-bold text-white">Markdown Editor</h1>
           <p className="text-gray-400">
-            Open source, customizable, and production-ready
+            WYSIWYG markdown editor powered by @histweety/ui
           </p>
         </div>
 
         {/* Controls */}
-        <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
           <div className="flex gap-2">
             <Button onClick={loadExample} size="md" mode="dark">
               Load Example
@@ -116,28 +115,8 @@ export default function MarkdownEditorPage() {
             <Button onClick={() => setContent("")} size="md" mode="dark">
               Clear
             </Button>
-            <Button onClick={() => handleSave(content)} size="md" mode="dark">
+            <Button onClick={handleSave} size="md" mode="dark">
               Save
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Toolbar:</span>
-            <Button
-              onClick={() => setToolbarMode("full")}
-              size="sm"
-              mode="dark"
-              className={toolbarMode === "full" ? "bg-blue-600" : ""}
-            >
-              Full
-            </Button>
-            <Button
-              onClick={() => setToolbarMode("minimal")}
-              size="sm"
-              mode="dark"
-              className={toolbarMode === "minimal" ? "bg-blue-600" : ""}
-            >
-              Minimal
             </Button>
           </div>
 
@@ -149,77 +128,62 @@ export default function MarkdownEditorPage() {
         </div>
 
         {/* Editor */}
-        <MarkdownEditor
+        <InputMarkdown
+          key={content}
           defaultValue={content}
-          toolbar={toolbarMode === "full" ? defaultToolbarActions : minimalToolbarActions}
-          enablePreview={true}
           placeholder="Start writing your markdown here..."
-          minHeight="500px"
-          theme="dark"
-          showWordCount={true}
-          autoSave={false}
+          mode="dark"
           onChange={handleChange}
-          onSave={handleSave}
+          className="min-h-[500px]"
         />
 
         {/* Info Section */}
         <div className="mt-6 rounded-lg border border-gray-700 bg-gray-800/50 p-6">
-          <h2 className="mb-4 text-2xl font-bold text-white">How to Customize</h2>
+          <h2 className="mb-4 text-2xl font-bold text-white">About InputMarkdown</h2>
 
           <div className="space-y-4 text-gray-300">
             <div>
-              <h3 className="mb-2 font-semibold text-white">1. Use Pre-built Toolbars</h3>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
-                <code>{`import { MarkdownEditor, minimalToolbarActions } from '@/components/markdown-editor';
-
-<MarkdownEditor
-  toolbar={minimalToolbarActions}
-/>`}</code>
-              </pre>
-            </div>
-
-            <div>
-              <h3 className="mb-2 font-semibold text-white">2. Create Custom Toolbar</h3>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
-                <code>{`import { ToolbarAction } from '@/components/markdown-editor';
-
-const customToolbar: ToolbarAction[] = [
-  {
-    id: 'bold',
-    label: 'Bold',
-    icon: 'B',
-    action: (editor) => editor.wrapSelection('**', '**'),
-  },
-  // Add more actions...
-];
-
-<MarkdownEditor toolbar={customToolbar} />`}</code>
-              </pre>
-            </div>
-
-            <div>
-              <h3 className="mb-2 font-semibold text-white">3. Add Custom Actions</h3>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
-                <code>{`const myCustomAction: ToolbarAction = {
-  id: 'insert-template',
-  label: 'Template',
-  icon: '📋',
-  tooltip: 'Insert Template',
-  action: (editor) => {
-    editor.insertText('## Your Template Here\\n\\nContent...');
-  },
-};`}</code>
-              </pre>
-            </div>
-
-            <div>
-              <h3 className="mb-2 font-semibold text-white">Keyboard Shortcuts</h3>
+              <h3 className="mb-2 font-semibold text-white">Features</h3>
               <ul className="list-inside list-disc space-y-1 text-sm">
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+B</kbd> - Bold</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+I</kbd> - Italic</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+K</kbd> - Insert Link</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+S</kbd> - Save</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Tab</kbd> - Indent</li>
+                <li>✅ WYSIWYG editing (what you see is what you get)</li>
+                <li>✅ Rich text formatting toolbar</li>
+                <li>✅ Tables, images, links support</li>
+                <li>✅ Code blocks with syntax highlighting</li>
+                <li>✅ Perfect newline and blank line preservation</li>
+                <li>✅ Keyboard shortcuts (Cmd/Ctrl+B, Cmd/Ctrl+I, etc.)</li>
+                <li>✅ Dark mode support</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="mb-2 font-semibold text-white">Basic Usage</h3>
+              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
+                <code>{`import { InputMarkdown } from '@histweety/ui';
+
+export default function MyPage() {
+  const [content, setContent] = useState("");
+
+  return (
+    <InputMarkdown
+      defaultValue={content}
+      placeholder="Start writing..."
+      mode="dark"
+      onChange={setContent}
+    />
+  );
+}`}</code>
+              </pre>
+            </div>
+
+            <div>
+              <h3 className="mb-2 font-semibold text-white">Props</h3>
+              <ul className="list-inside list-disc space-y-1 text-sm">
+                <li><code className="rounded bg-gray-700 px-2 py-1">defaultValue</code> - Initial markdown content</li>
+                <li><code className="rounded bg-gray-700 px-2 py-1">placeholder</code> - Placeholder text when empty</li>
+                <li><code className="rounded bg-gray-700 px-2 py-1">mode</code> - Theme mode: &quot;dark&quot;, &quot;light&quot;, or &quot;auto&quot;</li>
+                <li><code className="rounded bg-gray-700 px-2 py-1">onChange</code> - Callback when content changes</li>
+                <li><code className="rounded bg-gray-700 px-2 py-1">readOnly</code> - Make editor read-only</li>
+                <li><code className="rounded bg-gray-700 px-2 py-1">className</code> - Additional CSS classes</li>
               </ul>
             </div>
           </div>
