@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import { MarkdownEditor, defaultToolbarActions, minimalToolbarActions } from "@/components/markdown-editor";
+import { Button } from "@histweety/ui";
 
 const defaultContent = `# Welcome to Markdown Editor
 
@@ -109,48 +110,35 @@ export default function MarkdownEditorPage() {
         {/* Controls */}
         <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
           <div className="flex gap-2">
-            <button
-              onClick={loadExample}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
+            <Button onClick={loadExample} size="md" mode="dark">
               Load Example
-            </button>
-            <button
-              onClick={() => setContent("")}
-              className="rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700"
-            >
+            </Button>
+            <Button onClick={() => setContent("")} size="md" mode="dark">
               Clear
-            </button>
-            <button
-              onClick={() => handleSave(content)}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
-            >
+            </Button>
+            <Button onClick={() => handleSave(content)} size="md" mode="dark">
               Save
-            </button>
+            </Button>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">Toolbar:</span>
-            <button
+            <Button
               onClick={() => setToolbarMode("full")}
-              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                toolbarMode === "full"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
+              size="sm"
+              mode="dark"
+              className={toolbarMode === "full" ? "bg-blue-600" : ""}
             >
               Full
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setToolbarMode("minimal")}
-              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                toolbarMode === "minimal"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
+              size="sm"
+              mode="dark"
+              className={toolbarMode === "minimal" ? "bg-blue-600" : ""}
             >
               Minimal
-            </button>
+            </Button>
           </div>
 
           {savedContent && (
