@@ -34,6 +34,7 @@ export default function TransactionPage() {
   const [mounted, setMounted] = useState(false);
   const [monthlyExpenses, setMonthlyExpenses] = useState<number>(0);
   const [isLoadingExpenses, setIsLoadingExpenses] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -70,6 +71,7 @@ export default function TransactionPage() {
       const transactions: Transaction[] = await response.json();
       const total = transactions.reduce((sum: number, transaction: Transaction) => sum + transaction.amount, 0);
       setMonthlyExpenses(total);
+      setTransactions(transactions);
     } catch (error) {
       console.error("Error loading monthly expenses:", error);
     } finally {
@@ -152,6 +154,23 @@ export default function TransactionPage() {
     }
   };
 
+  const getTopExpensesByCategory = () => {
+    // Group transactions by category and sum amounts
+    const categoryTotals = transactions.reduce((acc: { [key: string]: number }, transaction) => {
+      const category = transaction.category;
+      acc[category] = (acc[category] || 0) + transaction.amount;
+      return acc;
+    }, {});
+
+    // Convert to array and sort by amount descending
+    const sortedCategories = Object.entries(categoryTotals)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount);
+
+    // Return top 3
+    return sortedCategories.slice(0, 3);
+  };
+
   const LoadingSkeleton = () => (
     <div className="card animate-pulse">
       <div className="space-y-6">
@@ -211,7 +230,7 @@ export default function TransactionPage() {
               </div>
             ) : (
               <div className="rounded-lg bg-gradient-to-br from-accent-purple/10 to-accent-blue/10 p-6 border border-border">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-6">
                   <div className="flex items-center gap-3">
                     <div className="rounded-full bg-accent-red/20 p-3">
                       <svg className="h-6 w-6 text-accent-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -225,6 +244,32 @@ export default function TransactionPage() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Top 3 Expenses by Category */}
+                  {getTopExpensesByCategory().length > 0 && (
+                    <div className="flex flex-col gap-2 min-w-[200px]">
+                      {getTopExpensesByCategory().map((item, index) => (
+                        <div
+                          key={item.category}
+                          className="flex items-center justify-between gap-3 rounded-lg bg-surface/80 backdrop-blur-sm px-3 py-2 border border-border/50 hover:border-border transition-colors"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className={`h-2 w-2 rounded-full flex-shrink-0 ${
+                              index === 0 ? "bg-accent-red" :
+                              index === 1 ? "bg-accent-orange" :
+                              "bg-accent-yellow"
+                            }`} />
+                            <span className="text-xs font-medium text-primary truncate">
+                              {item.category}
+                            </span>
+                          </div>
+                          <span className="text-xs font-semibold text-primary-muted whitespace-nowrap">
+                            Rp {item.amount.toLocaleString("id-ID", { notation: "compact", compactDisplay: "short" })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
