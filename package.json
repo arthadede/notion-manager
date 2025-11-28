@@ -11,7 +11,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@histweety/ui": "^0.1.0",
+    "@histweety/ui": "^0.1.1",
     "@notionhq/client": "^2.3.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "next": "^15.2.4",
