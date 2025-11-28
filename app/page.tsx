@@ -33,6 +33,13 @@ export default function HomePage() {
       icon: "📚",
       gradient: "from-orange-500/10 to-amber-500/10",
     },
+    {
+      title: "UI Kit Storybook",
+      description: "Explore and interact with UI component library",
+      href: "https://histweety-ui.vercel.app",
+      icon: "🎨",
+      gradient: "from-pink-500/10 to-rose-500/10",
+    },
       ];
 
   return (
