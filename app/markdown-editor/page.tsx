@@ -1,24 +1,25 @@
 /**
  * Markdown Editor Demo Page
- * Demonstrates the production-ready, customizable markdown editor
+ * Demonstrates the InputMarkdown component from @histweety/ui
+ * Powered by MDXEditor with WYSIWYG editing experience
  */
 
 "use client";
 
 import { useState } from "react";
-import { MarkdownEditor, defaultToolbarActions, minimalToolbarActions } from "@/components/markdown-editor";
+import { Button, InputMarkdown } from "@histweety/ui";
 
-const defaultContent = `# Welcome to Markdown Editor
+const defaultContent = `# Welcome to InputMarkdown
 
-This is a **production-ready**, _open-source_ markdown editor with a fully customizable menu.
+This is a **WYSIWYG** markdown editor powered by _MDXEditor_ with a Typora-like experience.
 
 ## Features
 
-- **Easy to Customize**: Modify toolbar actions via simple configuration
-- **Production Ready**: Built with TypeScript and best practices
+- **WYSIWYG Editing**: What you see is what you get - no separate preview mode
 - **Rich Formatting**: Support for all standard markdown features
-- **Live Preview**: See your markdown rendered in real-time
-- **Keyboard Shortcuts**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+K (link), Ctrl+S (save)
+- **Built-in Toolbar**: Comprehensive toolbar with all editing tools
+- **Perfect Newlines**: Blank lines and newlines are preserved exactly as typed
+- **Keyboard Shortcuts**: Cmd/Ctrl+B (bold), Cmd/Ctrl+I (italic), and more
 
 ## Examples
 
@@ -74,11 +75,11 @@ Start editing this document or clear it and write your own content. Use the tool
 `;
 
 export default function MarkdownEditorPage() {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(defaultContent);
   const [savedContent, setSavedContent] = useState<string | null>(null);
-  const [toolbarMode, setToolbarMode] = useState<"full" | "minimal">("full");
+  const [editorKey, setEditorKey] = useState(0);
 
-  const handleSave = (content: string) => {
+  const handleSave = () => {
     setSavedContent(content);
     console.log("Content saved:", content);
     // Here you could save to localStorage, API, etc.
@@ -87,13 +88,22 @@ export default function MarkdownEditorPage() {
     }
   };
 
-  const handleChange = (content: string) => {
-    setContent(content);
+  const handleChange = (newContent: string) => {
+    setContent(newContent);
   };
 
   const loadExample = () => {
     setContent(defaultContent);
+    setEditorKey((prev) => prev + 1); // Force editor reset
   };
+
+  const clearContent = () => {
+    setContent("");
+    setEditorKey((prev) => prev + 1); // Force editor reset
+  };
+
+  const wordCount = content.trim().split(/\s+/).filter((word) => word.length > 0).length;
+  const charCount = content.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
@@ -102,137 +112,143 @@ export default function MarkdownEditorPage() {
         <div className="mb-6">
           <h1 className="mb-2 text-4xl font-bold text-white">Markdown Editor</h1>
           <p className="text-gray-400">
-            Open source, customizable, and production-ready
+            WYSIWYG markdown editor powered by @histweety/ui
           </p>
         </div>
 
         {/* Controls */}
-        <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-          <div className="flex gap-2">
-            <button
-              onClick={loadExample}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              Load Example
-            </button>
-            <button
-              onClick={() => setContent("")}
-              className="rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-700"
-            >
-              Clear
-            </button>
-            <button
-              onClick={() => handleSave(content)}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
-            >
-              Save
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Toolbar:</span>
-            <button
-              onClick={() => setToolbarMode("full")}
-              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                toolbarMode === "full"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Full
-            </button>
-            <button
-              onClick={() => setToolbarMode("minimal")}
-              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                toolbarMode === "minimal"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              Minimal
-            </button>
-          </div>
-
-          {savedContent && (
-            <div className="text-sm text-green-400">
-              ✓ Last saved: {new Date().toLocaleTimeString()}
+        <div className="mb-4 space-y-3 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex gap-2">
+              <Button onClick={loadExample} size="md" mode="dark">
+                Load Example
+              </Button>
+              <Button onClick={clearContent} size="md" mode="dark">
+                Clear
+              </Button>
+              <Button onClick={handleSave} size="md" mode="dark">
+                Save
+              </Button>
             </div>
-          )}
+
+            {savedContent && (
+              <div className="text-sm text-green-400">
+                ✓ Last saved: {new Date().toLocaleTimeString()}
+              </div>
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center gap-6 border-t border-gray-700 pt-3 text-xs text-gray-400">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Words:</span>
+              <span className="text-white">{wordCount}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Characters:</span>
+              <span className="text-white">{charCount}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Status:</span>
+              <span className="text-blue-400">
+                {content ? "Editing" : "Empty"}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Editor */}
-        <MarkdownEditor
+        <InputMarkdown
+          key={editorKey}
           defaultValue={content}
-          toolbar={toolbarMode === "full" ? defaultToolbarActions : minimalToolbarActions}
-          enablePreview={true}
           placeholder="Start writing your markdown here..."
-          minHeight="500px"
-          theme="dark"
-          showWordCount={true}
-          autoSave={false}
+          mode="dark"
           onChange={handleChange}
-          onSave={handleSave}
+          className="min-h-[500px]"
         />
 
         {/* Info Section */}
-        <div className="mt-6 rounded-lg border border-gray-700 bg-gray-800/50 p-6">
-          <h2 className="mb-4 text-2xl font-bold text-white">How to Customize</h2>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {/* Features Card */}
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+            <h3 className="mb-4 text-lg font-bold text-white">✨ Features</h3>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>WYSIWYG editing experience</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Rich text formatting toolbar</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Tables, images, and links</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Code syntax highlighting</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Keyboard shortcuts</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Dark/Light mode support</span>
+              </li>
+            </ul>
+          </div>
 
-          <div className="space-y-4 text-gray-300">
-            <div>
-              <h3 className="mb-2 font-semibold text-white">1. Use Pre-built Toolbars</h3>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
-                <code>{`import { MarkdownEditor, minimalToolbarActions } from '@/components/markdown-editor';
+          {/* Usage Card */}
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+            <h3 className="mb-4 text-lg font-bold text-white">📝 Basic Usage</h3>
+            <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-xs">
+              <code className="text-gray-300">{`import { InputMarkdown } from '@histweety/ui';
 
-<MarkdownEditor
-  toolbar={minimalToolbarActions}
-/>`}</code>
-              </pre>
+export default function MyPage() {
+  const [content, setContent] = useState("");
+
+  return (
+    <InputMarkdown
+      defaultValue={content}
+      placeholder="Start writing..."
+      mode="dark"
+      onChange={setContent}
+    />
+  );
+}`}</code>
+            </pre>
+          </div>
+        </div>
+
+        {/* Props Section */}
+        <div className="mt-4 rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+          <h3 className="mb-4 text-lg font-bold text-white">⚙️ Component Props</h3>
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">defaultValue</code>
+              <p className="mt-1 text-xs text-gray-400">Initial markdown content</p>
             </div>
-
-            <div>
-              <h3 className="mb-2 font-semibold text-white">2. Create Custom Toolbar</h3>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
-                <code>{`import { ToolbarAction } from '@/components/markdown-editor';
-
-const customToolbar: ToolbarAction[] = [
-  {
-    id: 'bold',
-    label: 'Bold',
-    icon: 'B',
-    action: (editor) => editor.wrapSelection('**', '**'),
-  },
-  // Add more actions...
-];
-
-<MarkdownEditor toolbar={customToolbar} />`}</code>
-              </pre>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">placeholder</code>
+              <p className="mt-1 text-xs text-gray-400">Placeholder text when empty</p>
             </div>
-
-            <div>
-              <h3 className="mb-2 font-semibold text-white">3. Add Custom Actions</h3>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
-                <code>{`const myCustomAction: ToolbarAction = {
-  id: 'insert-template',
-  label: 'Template',
-  icon: '📋',
-  tooltip: 'Insert Template',
-  action: (editor) => {
-    editor.insertText('## Your Template Here\\n\\nContent...');
-  },
-};`}</code>
-              </pre>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">mode</code>
+              <p className="mt-1 text-xs text-gray-400">Theme: dark, light, or auto</p>
             </div>
-
-            <div>
-              <h3 className="mb-2 font-semibold text-white">Keyboard Shortcuts</h3>
-              <ul className="list-inside list-disc space-y-1 text-sm">
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+B</kbd> - Bold</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+I</kbd> - Italic</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+K</kbd> - Insert Link</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Ctrl+S</kbd> - Save</li>
-                <li><kbd className="rounded bg-gray-700 px-2 py-1">Tab</kbd> - Indent</li>
-              </ul>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">onChange</code>
+              <p className="mt-1 text-xs text-gray-400">Content change callback</p>
+            </div>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">readOnly</code>
+              <p className="mt-1 text-xs text-gray-400">Make editor read-only</p>
+            </div>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">className</code>
+              <p className="mt-1 text-xs text-gray-400">Additional CSS classes</p>
             </div>
           </div>
         </div>
