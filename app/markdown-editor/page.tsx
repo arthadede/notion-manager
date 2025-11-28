@@ -75,8 +75,9 @@ Start editing this document or clear it and write your own content. Use the tool
 `;
 
 export default function MarkdownEditorPage() {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(defaultContent);
   const [savedContent, setSavedContent] = useState<string | null>(null);
+  const [editorKey, setEditorKey] = useState(0);
 
   const handleSave = () => {
     setSavedContent(content);
@@ -93,7 +94,16 @@ export default function MarkdownEditorPage() {
 
   const loadExample = () => {
     setContent(defaultContent);
+    setEditorKey((prev) => prev + 1); // Force editor reset
   };
+
+  const clearContent = () => {
+    setContent("");
+    setEditorKey((prev) => prev + 1); // Force editor reset
+  };
+
+  const wordCount = content.trim().split(/\s+/).filter((word) => word.length > 0).length;
+  const charCount = content.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
@@ -107,29 +117,49 @@ export default function MarkdownEditorPage() {
         </div>
 
         {/* Controls */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-          <div className="flex gap-2">
-            <Button onClick={loadExample} size="md" mode="dark">
-              Load Example
-            </Button>
-            <Button onClick={() => setContent("")} size="md" mode="dark">
-              Clear
-            </Button>
-            <Button onClick={handleSave} size="md" mode="dark">
-              Save
-            </Button>
+        <div className="mb-4 space-y-3 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex gap-2">
+              <Button onClick={loadExample} size="md" mode="dark">
+                Load Example
+              </Button>
+              <Button onClick={clearContent} size="md" mode="dark">
+                Clear
+              </Button>
+              <Button onClick={handleSave} size="md" mode="dark">
+                Save
+              </Button>
+            </div>
+
+            {savedContent && (
+              <div className="text-sm text-green-400">
+                ✓ Last saved: {new Date().toLocaleTimeString()}
+              </div>
+            )}
           </div>
 
-          {savedContent && (
-            <div className="text-sm text-green-400">
-              ✓ Last saved: {new Date().toLocaleTimeString()}
+          {/* Stats */}
+          <div className="flex items-center gap-6 border-t border-gray-700 pt-3 text-xs text-gray-400">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Words:</span>
+              <span className="text-white">{wordCount}</span>
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Characters:</span>
+              <span className="text-white">{charCount}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Status:</span>
+              <span className="text-blue-400">
+                {content ? "Editing" : "Empty"}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Editor */}
         <InputMarkdown
-          key={content}
+          key={editorKey}
           defaultValue={content}
           placeholder="Start writing your markdown here..."
           mode="dark"
@@ -138,27 +168,43 @@ export default function MarkdownEditorPage() {
         />
 
         {/* Info Section */}
-        <div className="mt-6 rounded-lg border border-gray-700 bg-gray-800/50 p-6">
-          <h2 className="mb-4 text-2xl font-bold text-white">About InputMarkdown</h2>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {/* Features Card */}
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+            <h3 className="mb-4 text-lg font-bold text-white">✨ Features</h3>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>WYSIWYG editing experience</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Rich text formatting toolbar</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Tables, images, and links</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Code syntax highlighting</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Keyboard shortcuts</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Dark/Light mode support</span>
+              </li>
+            </ul>
+          </div>
 
-          <div className="space-y-4 text-gray-300">
-            <div>
-              <h3 className="mb-2 font-semibold text-white">Features</h3>
-              <ul className="list-inside list-disc space-y-1 text-sm">
-                <li>✅ WYSIWYG editing (what you see is what you get)</li>
-                <li>✅ Rich text formatting toolbar</li>
-                <li>✅ Tables, images, links support</li>
-                <li>✅ Code blocks with syntax highlighting</li>
-                <li>✅ Perfect newline and blank line preservation</li>
-                <li>✅ Keyboard shortcuts (Cmd/Ctrl+B, Cmd/Ctrl+I, etc.)</li>
-                <li>✅ Dark mode support</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-2 font-semibold text-white">Basic Usage</h3>
-              <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm">
-                <code>{`import { InputMarkdown } from '@histweety/ui';
+          {/* Usage Card */}
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+            <h3 className="mb-4 text-lg font-bold text-white">📝 Basic Usage</h3>
+            <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-xs">
+              <code className="text-gray-300">{`import { InputMarkdown } from '@histweety/ui';
 
 export default function MyPage() {
   const [content, setContent] = useState("");
@@ -172,19 +218,37 @@ export default function MyPage() {
     />
   );
 }`}</code>
-              </pre>
-            </div>
+            </pre>
+          </div>
+        </div>
 
-            <div>
-              <h3 className="mb-2 font-semibold text-white">Props</h3>
-              <ul className="list-inside list-disc space-y-1 text-sm">
-                <li><code className="rounded bg-gray-700 px-2 py-1">defaultValue</code> - Initial markdown content</li>
-                <li><code className="rounded bg-gray-700 px-2 py-1">placeholder</code> - Placeholder text when empty</li>
-                <li><code className="rounded bg-gray-700 px-2 py-1">mode</code> - Theme mode: &quot;dark&quot;, &quot;light&quot;, or &quot;auto&quot;</li>
-                <li><code className="rounded bg-gray-700 px-2 py-1">onChange</code> - Callback when content changes</li>
-                <li><code className="rounded bg-gray-700 px-2 py-1">readOnly</code> - Make editor read-only</li>
-                <li><code className="rounded bg-gray-700 px-2 py-1">className</code> - Additional CSS classes</li>
-              </ul>
+        {/* Props Section */}
+        <div className="mt-4 rounded-lg border border-gray-700 bg-gray-800/50 p-6">
+          <h3 className="mb-4 text-lg font-bold text-white">⚙️ Component Props</h3>
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">defaultValue</code>
+              <p className="mt-1 text-xs text-gray-400">Initial markdown content</p>
+            </div>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">placeholder</code>
+              <p className="mt-1 text-xs text-gray-400">Placeholder text when empty</p>
+            </div>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">mode</code>
+              <p className="mt-1 text-xs text-gray-400">Theme: dark, light, or auto</p>
+            </div>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">onChange</code>
+              <p className="mt-1 text-xs text-gray-400">Content change callback</p>
+            </div>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">readOnly</code>
+              <p className="mt-1 text-xs text-gray-400">Make editor read-only</p>
+            </div>
+            <div className="rounded-lg bg-gray-900/50 p-3">
+              <code className="text-sm font-semibold text-blue-400">className</code>
+              <p className="mt-1 text-xs text-gray-400">Additional CSS classes</p>
             </div>
           </div>
         </div>
